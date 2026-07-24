@@ -1,7 +1,6 @@
-```markdown
 # 🐳 Dockerman Deadline System
 
-Sistema de **deadlines** com contagem regressiva contínua, barra de progresso visual e persistência em banco de dados.
+Sistema de **deadlines** com contagem regressiva contínua, barra de progresso visual, **tags com porcentagem de completude** e persistência em banco de dados.
 
 ## Funcionalidades
 
@@ -13,8 +12,16 @@ Sistema de **deadlines** com contagem regressiva contínua, barra de progresso v
   - **< 7 dias** → Vermelho (Crítico)
   - **Atrasado** → Vermelho
 - Cadastro de novos deadlines
+- **Tags com progresso** (ex: `Rafael Veiga 45%`)
+  - Adicione quantas tags quiser ao criar ou editar
+  - Cada tag tem uma porcentagem de 0 a 100%
+  - A cor da tag muda automaticamente:
+    - **0%** → Vermelho
+    - **50%** → Amarelo
+    - **100%** → Verde
+  - Atualize o percentual clicando na tag (no modal de edição) ou editando o deadline
 - Listagem de todos os deadlines (ativos e finalizados)
-- Edição de título, descrição e data limite
+- Edição de título, descrição, data limite e tags
 - Finalizar / Reabrir deadlines
 - Exclusão permanente
 - Filtros: Ativos / Finalizados / Todos
@@ -89,11 +96,26 @@ Acesse: **http://localhost:8000**
 {
   "title": "Entregar relatório",
   "description": "Relatório mensal",
-  "due_at": "2026-08-15T18:00:00.000Z"
+  "due_at": "2026-08-15T18:00:00.000Z",
+  "tags": [
+    { "name": "Rafael Veiga", "percent": 35 },
+    { "name": "Equipe Backend", "percent": 80 }
+  ]
 }
 ```
 
-## Cores de Urgência
+### Exemplo de atualização de tags (PUT)
+
+```json
+{
+  "tags": [
+    { "name": "Rafael Veiga", "percent": 72 },
+    { "name": "Equipe Backend", "percent": 100 }
+  ]
+}
+```
+
+## Cores de Urgência (barra principal)
 
 A cor da barra e do tempo restante é definida pela quantidade de **dias restantes**:
 
@@ -105,7 +127,18 @@ A cor da barra e do tempo restante é definida pela quantidade de **dias restant
 | Menos de 7     | Vermelho | Crítico   |
 | Atrasado       | Vermelho | Atrasado  |
 
+## Cores das Tags (progresso individual)
+
+| Percentual | Cor aproximada |
+|------------|----------------|
+| 0%         | Vermelho       |
+| 25%        | Laranja        |
+| 50%        | Amarelo        |
+| 75%        | Verde-claro    |
+| 100%       | Verde          |
+
+A cor é calculada em HSL: `hue = (percent / 100) * 120` (0° vermelho → 120° verde).
+
 ---
 
 Feito com 🐳 por **Dockerman**
-```

@@ -1,7 +1,8 @@
 #!/usr/bin/env python3
 """
 Dockerman Deadline System
-Sistema de deadlines com contagem regressiva contínua e barra de urgência.
+Sistema de deadlines com contagem regressiva contínua, barra de urgência
+e tags com porcentagem de completude (cor vermelho → verde).
 Backend: Python puro + SQLite + API REST
 """
 
@@ -14,7 +15,7 @@ from http.server import HTTPServer, BaseHTTPRequestHandler
 from pathlib import Path
 
 # Configurações
-PORT = int(os.environ.get("PORT", 9999))
+PORT = int(os.environ.get("PORT", 8000))
 DATA_DIR = Path(os.environ.get("DATA_DIR", "data"))
 DB_PATH = DATA_DIR / "deadlines.db"
 PUBLIC_DIR = Path(__file__).parent / "public"
@@ -38,9 +39,14 @@ def init_db():
                 due_at TEXT NOT NULL,
                 created_at TEXT NOT NULL,
                 updated_at TEXT NOT NULL,
-                finished_at TEXT
+                finished_at TEXT,
+                tags TEXT DEFAULT '[]'
             )
         """)
+        # Migração segura: adiciona coluna tags se ainda não existir
+        cols = [r[1] for r in conn.execute("PRAGMA table_info(deadlines)").fetchall()]
+        if "tags" not in cols:
+            conn.execute("ALTER TABLE deadlines ADD COLUMN tags TEXT DEFAULT '[]'")
         conn.commit()
 
 
@@ -48,7 +54,35 @@ def now_iso():
     return datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%S.%f")[:-3] + "Z"
 
 
+def normalize_tags(raw):
+    """Valida e normaliza lista de tags: [{name, percent}, ...]"""
+    if raw is None:
+        return []
+    if isinstance(raw, str):
+        try:
+            raw = json.loads(raw)
+        except (json.JSONDecodeError, TypeError):
+            return []
+    if not isinstance(raw, list):
+        return []
+    result = []
+    for item in raw:
+        if not isinstance(item, dict):
+            continue
+        name = str(item.get("name") or "").strip()
+        if not name:
+            continue
+        try:
+            percent = float(item.get("percent", 0))
+        except (TypeError, ValueError):
+            percent = 0.0
+        percent = max(0.0, min(100.0, percent))
+        result.append({"name": name, "percent": round(percent, 1)})
+    return result
+
+
 def row_to_dict(row):
+    tags = normalize_tags(row["tags"] if "tags" in row.keys() else "[]")
     return {
         "id": row["id"],
         "title": row["title"],
@@ -57,6 +91,7 @@ def row_to_dict(row):
         "created_at": row["created_at"],
         "updated_at": row["updated_at"],
         "finished_at": row["finished_at"],
+        "tags": tags,
     }
 
 
@@ -94,7 +129,6 @@ class DeadlineHandler(BaseHTTPRequestHandler):
         parsed = urllib.parse.urlparse(self.path)
         path = parsed.path
 
-        # Lista todos os deadlines
         if path == "/api/deadlines":
             with get_db() as conn:
                 rows = conn.execute(
@@ -103,12 +137,11 @@ class DeadlineHandler(BaseHTTPRequestHandler):
             self._send_json([row_to_dict(r) for r in rows])
             return
 
-        # Serve o frontend
         if path == "/" or path == "/index.html":
             self._serve_file(PUBLIC_DIR / "index.html", "text/html; charset=utf-8")
             return
 
-        # Arquivos estáticos (caso precise no futuro)
+        # Servir arquivos estáticos de /public
         if path.startswith("/"):
             file_path = PUBLIC_DIR / path.lstrip("/")
             if file_path.is_file() and PUBLIC_DIR in file_path.resolve().parents:
@@ -119,7 +152,6 @@ class DeadlineHandler(BaseHTTPRequestHandler):
         self._send_error("Não encontrado", 404)
 
     def do_POST(self):
-        # Criar novo deadline
         if self.path != "/api/deadlines":
             self._send_error("Não encontrado", 404)
             return
@@ -141,15 +173,17 @@ class DeadlineHandler(BaseHTTPRequestHandler):
             return
 
         description = (data.get("description") or "").strip()
+        tags = normalize_tags(data.get("tags"))
         now = now_iso()
+        tags_json = json.dumps(tags, ensure_ascii=False)
 
         with get_db() as conn:
             cur = conn.execute(
                 """
-                INSERT INTO deadlines (title, description, due_at, created_at, updated_at, finished_at)
-                VALUES (?, ?, ?, ?, ?, NULL)
+                INSERT INTO deadlines (title, description, due_at, created_at, updated_at, finished_at, tags)
+                VALUES (?, ?, ?, ?, ?, NULL, ?)
                 """,
-                (title, description, due_at, now, now),
+                (title, description, due_at, now, now, tags_json),
             )
             new_id = cur.lastrowid
             conn.commit()
@@ -158,7 +192,7 @@ class DeadlineHandler(BaseHTTPRequestHandler):
         self._send_json(row_to_dict(row), 201)
 
     def do_PUT(self):
-        # Atualizar deadline existente: /api/deadlines/123
+        # /api/deadlines/123
         parts = self.path.strip("/").split("/")
         if len(parts) != 3 or parts[0] != "api" or parts[1] != "deadlines":
             self._send_error("Não encontrado", 404)
@@ -188,6 +222,13 @@ class DeadlineHandler(BaseHTTPRequestHandler):
             finished_at = row["finished_at"]
             now = now_iso()
 
+            # Tags: se enviadas, substitui; senão mantém
+            if "tags" in data:
+                tags = normalize_tags(data["tags"])
+            else:
+                tags = normalize_tags(row["tags"] if "tags" in row.keys() else "[]")
+            tags_json = json.dumps(tags, ensure_ascii=False)
+
             # Marcar como finalizado
             if data.get("finished") is True and not finished_at:
                 finished_at = now
@@ -202,10 +243,10 @@ class DeadlineHandler(BaseHTTPRequestHandler):
             conn.execute(
                 """
                 UPDATE deadlines
-                SET title = ?, description = ?, due_at = ?, updated_at = ?, finished_at = ?
+                SET title = ?, description = ?, due_at = ?, updated_at = ?, finished_at = ?, tags = ?
                 WHERE id = ?
                 """,
-                (title, description, due_at, now, finished_at, deadline_id),
+                (title, description, due_at, now, finished_at, tags_json, deadline_id),
             )
             conn.commit()
             updated = conn.execute("SELECT * FROM deadlines WHERE id = ?", (deadline_id,)).fetchone()
@@ -213,7 +254,6 @@ class DeadlineHandler(BaseHTTPRequestHandler):
         self._send_json(row_to_dict(updated))
 
     def do_DELETE(self):
-        # Excluir deadline: /api/deadlines/123
         parts = self.path.strip("/").split("/")
         if len(parts) != 3 or parts[0] != "api" or parts[1] != "deadlines":
             self._send_error("Não encontrado", 404)
@@ -263,14 +303,14 @@ def main():
     init_db()
     print("=" * 60)
     print("  🐳 Dockerman Deadline System")
-    print("  Sistema de deadlines com contagem regressiva e urgência")
+    print("  Sistema de deadlines com contagem regressiva, urgência e tags")
     print("=" * 60)
     print(f"  Banco: {DB_PATH}")
-    print(f"  Servindo em: https://192.168.1.80:{PORT}")
+    print(f"  Servindo em: http://0.0.0.0:{PORT}")
     print("  Pressione Ctrl+C para parar")
     print("=" * 60)
 
-    server = HTTPServer(("", PORT), DeadlineHandler)
+    server = HTTPServer(("0.0.0.0", PORT), DeadlineHandler)
     try:
         server.serve_forever()
     except KeyboardInterrupt:

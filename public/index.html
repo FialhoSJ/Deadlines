@@ -56,6 +56,21 @@
       opacity: 0.65;
       filter: grayscale(0.4);
     }
+    .tag-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      padding: 2px 8px;
+      border-radius: 9999px;
+      font-size: 11px;
+      font-weight: 500;
+      border: 1px solid;
+      transition: all 0.2s;
+      cursor: default;
+    }
+    .tag-badge:hover {
+      filter: brightness(1.15);
+    }
   </style>
 </head>
 <body class="bg-dock-950 text-slate-100 min-h-screen">
@@ -68,7 +83,7 @@
       <button data-filter="all" class="filter-btn px-4 py-1.5 rounded-full text-sm font-medium bg-slate-700 text-slate-300 hover:bg-slate-600">Todos</button>
     </div>
 
-    <!-- Lista de deadlines (barras primeiro) -->
+    <!-- Lista de deadlines -->
     <div id="list" class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-3 mb-10">
       <!-- cards renderizados via JS -->
     </div>
@@ -79,32 +94,54 @@
       <p class="text-sm mt-1">Adicione o primeiro abaixo</p>
     </div>
 
-    <!-- Form de novo deadline (depois das barras) -->
+    <!-- Form de novo deadline -->
     <section class="bg-dock-900 border border-slate-800 rounded-2xl p-6 shadow-xl">
       <h2 class="text-lg font-semibold mb-4 flex items-center gap-2">
         <span class="text-cyan-400">+</span> Novo Deadline
       </h2>
-      <form id="form-new" class="grid grid-cols-1 md:grid-cols-12 gap-4">
-        <div class="md:col-span-4">
-          <label class="block text-xs text-slate-400 mb-1">Título *</label>
-          <input type="text" id="new-title" required placeholder="Ex: Entregar relatório Q3"
-            class="w-full bg-dock-800 border border-slate-700 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-cyan-500/50 focus:border-cyan-500" />
+      <form id="form-new" class="space-y-4">
+        <div class="grid grid-cols-1 md:grid-cols-12 gap-4">
+          <div class="md:col-span-4">
+            <label class="block text-xs text-slate-400 mb-1">Título *</label>
+            <input type="text" id="new-title" required placeholder="Ex: Entregar relatório Q3"
+              class="w-full bg-dock-800 border border-slate-700 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-cyan-500/50 focus:border-cyan-500" />
+          </div>
+          <div class="md:col-span-3">
+            <label class="block text-xs text-slate-400 mb-1">Descrição</label>
+            <input type="text" id="new-desc" placeholder="Opcional"
+              class="w-full bg-dock-800 border border-slate-700 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-cyan-500/50" />
+          </div>
+          <div class="md:col-span-3">
+            <label class="block text-xs text-slate-400 mb-1">Data e hora limite *</label>
+            <input type="datetime-local" id="new-due" required
+              class="w-full bg-dock-800 border border-slate-700 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-cyan-500/50" />
+          </div>
+          <div class="md:col-span-2 flex items-end">
+            <button type="submit"
+              class="w-full bg-cyan-600 hover:bg-cyan-500 text-white font-medium py-2.5 rounded-lg transition flex items-center justify-center gap-2">
+              <span>Cadastrar</span>
+            </button>
+          </div>
         </div>
-        <div class="md:col-span-3">
-          <label class="block text-xs text-slate-400 mb-1">Descrição</label>
-          <input type="text" id="new-desc" placeholder="Opcional"
-            class="w-full bg-dock-800 border border-slate-700 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-cyan-500/50" />
-        </div>
-        <div class="md:col-span-3">
-          <label class="block text-xs text-slate-400 mb-1">Data e hora limite *</label>
-          <input type="datetime-local" id="new-due" required
-            class="w-full bg-dock-800 border border-slate-700 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-cyan-500/50" />
-        </div>
-        <div class="md:col-span-2 flex items-end">
-          <button type="submit"
-            class="w-full bg-cyan-600 hover:bg-cyan-500 text-white font-medium py-2.5 rounded-lg transition flex items-center justify-center gap-2">
-            <span>Cadastrar</span>
-          </button>
+
+        <!-- Tags no formulário de criação -->
+        <div class="border-t border-slate-800 pt-4">
+          <label class="block text-xs text-slate-400 mb-2">Tags com progresso (ex: pessoa / equipe)</label>
+          <div class="flex flex-wrap gap-2 mb-2" id="new-tags-list"></div>
+          <div class="flex flex-wrap gap-2 items-end">
+            <div class="flex-1 min-w-[140px]">
+              <input type="text" id="new-tag-name" placeholder="Nome da tag (ex: Rafael Veiga)"
+                class="w-full bg-dock-800 border border-slate-700 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-cyan-500/50" />
+            </div>
+            <div class="w-24">
+              <input type="number" id="new-tag-percent" min="0" max="100" step="1" value="0" placeholder="%"
+                class="w-full bg-dock-800 border border-slate-700 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-cyan-500/50" />
+            </div>
+            <button type="button" id="btn-add-new-tag"
+              class="px-3 py-2 bg-slate-700 hover:bg-slate-600 rounded-lg text-sm font-medium transition">
+              + Tag
+            </button>
+          </div>
         </div>
       </form>
     </section>
@@ -112,7 +149,7 @@
 
   <!-- Modal de edição -->
   <div id="modal" class="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
-    <div class="bg-dock-900 border border-slate-700 rounded-2xl w-full max-w-md p-6 shadow-2xl">
+    <div class="bg-dock-900 border border-slate-700 rounded-2xl w-full max-w-lg p-6 shadow-2xl max-h-[90vh] overflow-y-auto">
       <h3 class="text-lg font-semibold mb-4">Editar Deadline</h3>
       <form id="form-edit" class="space-y-4">
         <input type="hidden" id="edit-id" />
@@ -131,6 +168,28 @@
           <input type="datetime-local" id="edit-due" required
             class="w-full bg-dock-800 border border-slate-700 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-cyan-500/50" />
         </div>
+
+        <!-- Tags no modal de edição -->
+        <div class="border-t border-slate-800 pt-4">
+          <label class="block text-xs text-slate-400 mb-2">Tags com progresso</label>
+          <div class="flex flex-wrap gap-2 mb-2" id="edit-tags-list"></div>
+          <div class="flex flex-wrap gap-2 items-end">
+            <div class="flex-1 min-w-[140px]">
+              <input type="text" id="edit-tag-name" placeholder="Nome da tag"
+                class="w-full bg-dock-800 border border-slate-700 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-cyan-500/50" />
+            </div>
+            <div class="w-24">
+              <input type="number" id="edit-tag-percent" min="0" max="100" step="1" value="0" placeholder="%"
+                class="w-full bg-dock-800 border border-slate-700 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-cyan-500/50" />
+            </div>
+            <button type="button" id="btn-add-edit-tag"
+              class="px-3 py-2 bg-slate-700 hover:bg-slate-600 rounded-lg text-sm font-medium transition">
+              + Tag
+            </button>
+          </div>
+          <p class="text-[10px] text-slate-500 mt-2">Clique no % de uma tag para alterar o valor rapidamente.</p>
+        </div>
+
         <div class="flex gap-3 pt-2">
           <button type="button" id="btn-cancel-edit"
             class="flex-1 bg-slate-700 hover:bg-slate-600 py-2.5 rounded-lg text-sm font-medium">Cancelar</button>
@@ -145,6 +204,8 @@
     // ============ Estado ============
     let deadlines = [];
     let currentFilter = 'active';
+    let newTags = [];      // tags do formulário de criação
+    let editTags = [];     // tags do modal de edição
 
     // ============ API ============
     const API = '/api/deadlines';
@@ -217,7 +278,6 @@
       const remaining = due - now;
       let percent = Math.max(0, Math.min(100, (remaining / total) * 100));
 
-      // Dias restantes (baseado em quantidade absoluta de dias)
       const daysLeft = remaining / (1000 * 60 * 60 * 24);
 
       let color, label;
@@ -226,19 +286,27 @@
         label = 'Atrasado';
         percent = 0;
       } else if (daysLeft > 30) {
-        color = '#22c55e'; // verde
+        color = '#22c55e';
         label = 'Tranquilo';
       } else if (daysLeft > 15) {
-        color = '#eab308'; // amarelo
+        color = '#eab308';
         label = 'Atenção';
       } else if (daysLeft > 7) {
-        color = '#f97316'; // laranja
+        color = '#f97316';
         label = 'Urgente';
       } else {
-        color = '#ef4444'; // vermelho
+        color = '#ef4444';
         label = 'Crítico';
       }
       return { percent, color, label };
+    }
+
+    /** Cor de tag: 0% = vermelho, 100% = verde (via amarelo) */
+    function percentColor(p) {
+      const percent = Math.max(0, Math.min(100, Number(p) || 0));
+      // Hue: 0 (vermelho) → 60 (amarelo) → 120 (verde)
+      const hue = (percent / 100) * 120;
+      return `hsl(${hue}, 78%, 48%)`;
     }
 
     function formatDate(iso) {
@@ -248,6 +316,77 @@
         day: '2-digit', month: '2-digit', year: 'numeric',
         hour: '2-digit', minute: '2-digit'
       });
+    }
+
+    // ============ Tags helpers ============
+    function renderTagBadges(tags, editable = false, listId = null) {
+      if (!tags || tags.length === 0) return '';
+      return tags.map((t, idx) => {
+        const color = percentColor(t.percent);
+        const clickAttr = editable
+          ? `onclick="promptEditTagPercent('${listId}', ${idx})"`
+          : '';
+        const cursor = editable ? 'cursor-pointer' : '';
+        return `
+          <span class="tag-badge ${cursor}" style="background:${color}22;color:${color};border-color:${color}55" ${clickAttr}
+                title="${editable ? 'Clique para alterar %' : ''}">
+            ${escapeHtml(t.name)}
+            <span class="mono font-semibold">${Number(t.percent).toFixed(0)}%</span>
+            ${editable ? `<button type="button" onclick="event.stopPropagation(); removeTag('${listId}', ${idx})" class="ml-0.5 opacity-70 hover:opacity-100 text-xs leading-none">×</button>` : ''}
+          </span>
+        `;
+      }).join('');
+    }
+
+    function renderTagsList(listId) {
+      const el = document.getElementById(listId);
+      if (!el) return;
+      const tags = listId === 'new-tags-list' ? newTags : editTags;
+      el.innerHTML = renderTagBadges(tags, true, listId);
+    }
+
+    function addTag(listId) {
+      const isNew = listId === 'new-tags-list';
+      const nameEl = document.getElementById(isNew ? 'new-tag-name' : 'edit-tag-name');
+      const percentEl = document.getElementById(isNew ? 'new-tag-percent' : 'edit-tag-percent');
+      const name = (nameEl.value || '').trim();
+      let percent = parseFloat(percentEl.value);
+      if (isNaN(percent)) percent = 0;
+      percent = Math.max(0, Math.min(100, percent));
+      if (!name) {
+        nameEl.focus();
+        return;
+      }
+      const tags = isNew ? newTags : editTags;
+      // Evita duplicata de nome (case insensitive)
+      if (tags.some(t => t.name.toLowerCase() === name.toLowerCase())) {
+        alert('Já existe uma tag com esse nome');
+        return;
+      }
+      tags.push({ name, percent });
+      nameEl.value = '';
+      percentEl.value = '0';
+      renderTagsList(listId);
+      nameEl.focus();
+    }
+
+    function removeTag(listId, idx) {
+      const tags = listId === 'new-tags-list' ? newTags : editTags;
+      tags.splice(idx, 1);
+      renderTagsList(listId);
+    }
+
+    function promptEditTagPercent(listId, idx) {
+      const tags = listId === 'new-tags-list' ? newTags : editTags;
+      const t = tags[idx];
+      if (!t) return;
+      const val = prompt(`Novo percentual para "${t.name}" (0 a 100):`, String(t.percent));
+      if (val === null) return;
+      let percent = parseFloat(val);
+      if (isNaN(percent)) return;
+      percent = Math.max(0, Math.min(100, percent));
+      t.percent = Math.round(percent * 10) / 10;
+      renderTagsList(listId);
     }
 
     // ============ Render ============
@@ -281,6 +420,10 @@
         const finishedClass = isFinished ? 'finished-card' : '';
         const pulse = !isFinished && urgency.percent < 10 && !remaining.overdue ? 'animate-pulse-urgent' : '';
 
+        const tagsHtml = (d.tags && d.tags.length)
+          ? `<div class="mt-2 flex flex-wrap gap-1.5">${renderTagBadges(d.tags, false)}</div>`
+          : '';
+
         return `
           <div class="card bg-dock-900 border border-slate-800 rounded-lg p-3 ${overdueClass} ${finishedClass}" data-id="${d.id}">
             <div class="flex items-start justify-between gap-2">
@@ -307,6 +450,8 @@
                 }
               </div>
             </div>
+
+            ${tagsHtml}
 
             <!-- Barra de urgência -->
             <div class="mt-2">
@@ -385,15 +530,36 @@
       document.getElementById('edit-id').value = id;
       document.getElementById('edit-title').value = d.title;
       document.getElementById('edit-desc').value = d.description || '';
-      // datetime-local precisa de formato local sem Z
       const due = parseISO(d.due_at);
       const local = new Date(due.getTime() - due.getTimezoneOffset() * 60000)
         .toISOString().slice(0, 16);
       document.getElementById('edit-due').value = local;
+
+      // Copia tags para o estado de edição
+      editTags = (d.tags || []).map(t => ({ name: t.name, percent: t.percent }));
+      renderTagsList('edit-tags-list');
+
       document.getElementById('modal').classList.remove('hidden');
     }
 
     // ============ Eventos ============
+    document.getElementById('btn-add-new-tag').addEventListener('click', () => addTag('new-tags-list'));
+    document.getElementById('btn-add-edit-tag').addEventListener('click', () => addTag('edit-tags-list'));
+
+    // Enter nos inputs de tag também adiciona
+    document.getElementById('new-tag-name').addEventListener('keydown', e => {
+      if (e.key === 'Enter') { e.preventDefault(); addTag('new-tags-list'); }
+    });
+    document.getElementById('new-tag-percent').addEventListener('keydown', e => {
+      if (e.key === 'Enter') { e.preventDefault(); addTag('new-tags-list'); }
+    });
+    document.getElementById('edit-tag-name').addEventListener('keydown', e => {
+      if (e.key === 'Enter') { e.preventDefault(); addTag('edit-tags-list'); }
+    });
+    document.getElementById('edit-tag-percent').addEventListener('keydown', e => {
+      if (e.key === 'Enter') { e.preventDefault(); addTag('edit-tags-list'); }
+    });
+
     document.getElementById('form-new').addEventListener('submit', async (e) => {
       e.preventDefault();
       const title = document.getElementById('new-title').value.trim();
@@ -401,12 +567,13 @@
       const dueLocal = document.getElementById('new-due').value;
       if (!title || !dueLocal) return;
 
-      // Converte datetime-local para ISO UTC
       const due = new Date(dueLocal).toISOString();
 
       try {
-        await createDeadline({ title, description, due_at: due });
+        await createDeadline({ title, description, due_at: due, tags: newTags });
         document.getElementById('form-new').reset();
+        newTags = [];
+        renderTagsList('new-tags-list');
         await fetchDeadlines();
       } catch (err) {
         alert(err.message);
@@ -422,7 +589,7 @@
       const due = new Date(dueLocal).toISOString();
 
       try {
-        await updateDeadline(id, { title, description, due_at: due });
+        await updateDeadline(id, { title, description, due_at: due, tags: editTags });
         document.getElementById('modal').classList.add('hidden');
         await fetchDeadlines();
       } catch (err) {
@@ -449,7 +616,7 @@
 
     // Continuous update (a cada 1s)
     function tick() {
-      render(); // re-render para atualizar barras e tempos
+      render();
     }
 
     // Init
