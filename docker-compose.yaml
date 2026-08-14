@@ -1,6 +1,4 @@
 # Dockerman Deadline System
-version: "3.8"
-
 services:
   deadlines:
     build: .
@@ -13,6 +11,16 @@ services:
       - PORT=9999
       - DATA_DIR=/app/data
     restart: unless-stopped
+    develop:
+      watch:
+        - path: ./app.py
+          target: /app/app.py
+          action: sync+restart
+        - path: ./public
+          target: /app/public
+          action: sync
+        - path: ./dockerfile
+          action: rebuild
 
 volumes:
   deadlines-data:

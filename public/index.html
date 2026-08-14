@@ -42,6 +42,17 @@
       transition: width 0.8s ease, background-color 0.5s ease;
       box-shadow: 0 0 12px currentColor;
     }
+    .tree-line {
+      position: relative;
+      padding-left: 1.25rem;
+    }
+    .tree-line::before {
+      content: '└─';
+      position: absolute;
+      left: 0;
+      color: #64748b;
+      font-family: 'JetBrains Mono', monospace;
+    }
     .card {
       transition: transform 0.2s, box-shadow 0.2s;
     }
@@ -55,6 +66,10 @@
     .finished-card {
       opacity: 0.65;
       filter: grayscale(0.4);
+    }
+    .input-error {
+      border-color: #f87171 !important;
+      box-shadow: 0 0 0 2px rgba(248,113,113,0.25);
     }
   </style>
 </head>
@@ -79,31 +94,34 @@
       <p class="text-sm mt-1">Adicione o primeiro abaixo</p>
     </div>
 
-    <!-- Form de novo deadline (depois das barras) -->
-    <section class="bg-dock-900 border border-slate-800 rounded-2xl p-6 shadow-xl">
-      <h2 class="text-lg font-semibold mb-4 flex items-center gap-2">
-        <span class="text-cyan-400">+</span> Novo Deadline
-      </h2>
-      <form id="form-new" class="grid grid-cols-1 md:grid-cols-12 gap-4">
+     <!-- Form de novo deadline (Fundo da página, idêntico à caixa do rascunho com o botão verde no canto) -->
+    <section class="bg-dock-900 border border-slate-800 rounded-xl p-4 shadow-xl my-6">
+      <form id="form-new" class="grid grid-cols-1 md:grid-cols-12 gap-3 items-center">
         <div class="md:col-span-4">
-          <label class="block text-xs text-slate-400 mb-1">Título *</label>
-          <input type="text" id="new-title" required placeholder="Ex: Entregar relatório Q3"
-            class="w-full bg-dock-800 border border-slate-700 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-cyan-500/50 focus:border-cyan-500" />
+          <input type="text" id="new-title" required placeholder="Título "
+            class="w-full bg-dock-800 border border-slate-700 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-emerald-500" />
         </div>
         <div class="md:col-span-3">
-          <label class="block text-xs text-slate-400 mb-1">Descrição</label>
-          <input type="text" id="new-desc" placeholder="Opcional"
-            class="w-full bg-dock-800 border border-slate-700 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-cyan-500/50" />
+          <input type="text" id="new-desc" placeholder="Descrição"
+            class="w-full bg-dock-800 border border-slate-700 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-emerald-500" />
         </div>
         <div class="md:col-span-3">
-          <label class="block text-xs text-slate-400 mb-1">Data e hora limite *</label>
           <input type="datetime-local" id="new-due" required
-            class="w-full bg-dock-800 border border-slate-700 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-cyan-500/50" />
+            class="w-full bg-dock-800 border border-slate-700 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-emerald-500 text-slate-300" />
         </div>
-        <div class="md:col-span-2 flex items-end">
+        <div class="md:col-span-2">
+          <!-- Botão destacado estilo box verde da imagem -->
           <button type="submit"
-            class="w-full bg-cyan-600 hover:bg-cyan-500 text-white font-medium py-2.5 rounded-lg transition flex items-center justify-center gap-2">
-            <span>Cadastrar</span>
+            class="w-full border-2 border-emerald-400 bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 font-medium py-2 rounded-md transition text-sm flex items-center justify-center">
+            <span>+ Cadastrar</span>
+          </button>
+        </div>
+        <div class="md:col-span-12 flex flex-wrap items-center gap-2">
+          <!-- Membros: um campo para cada -->
+          <div id="form-members" class="flex flex-wrap items-center gap-2"></div>
+          <button type="button" id="btn-add-form-member"
+            class="border border-emerald-400/40 text-emerald-400 hover:bg-emerald-500/10 font-medium px-3 py-2 rounded-md transition text-sm">
+            + Membro
           </button>
         </div>
       </form>
@@ -141,10 +159,50 @@
     </div>
   </div>
 
+  <!-- Modal de detalhes com etapas e porcentagem -->
+  <div id="modal-details" class="fixed inset-0 bg-black/75 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+    <div class="bg-dock-900 border border-slate-700 rounded-2xl w-full max-w-md p-6 shadow-2xl relative">
+      <button id="btn-close-details" class="absolute top-4 right-4 text-slate-400 hover:text-white text-lg">✕</button>
+
+      <!-- Título principal -->
+      <h2 id="detail-title" class="text-2xl font-bold text-white mb-2 mono"></h2>
+
+      <!-- Porcentagem geral do projeto -->
+      <div class="flex items-center gap-2 text-lg font-semibold mb-2">
+        <span id="detail-member" class="text-red-400 font-bold">Geral</span>
+        <span class="text-slate-400">→</span>
+        <span id="detail-percent" class="mono text-emerald-400">0%</span>
+      </div>
+
+      <!-- Barra geral -->
+      <div class="mb-6">
+        <div class="bar-track">
+          <div id="detail-bar" class="bar-fill" style="width: 0%; background-color: #10b981; color: #10b981;"></div>
+        </div>
+      </div>
+
+      <!-- Lista de membros (renderizada via JS) -->
+      <div id="members-list" class="space-y-4 max-h-72 overflow-y-auto pr-1">
+        <!-- Renderizado via JS -->
+      </div>
+
+      <!-- Adicionar membro -->
+      <div class="mt-5 flex gap-2">
+        <input type="text" id="new-member-name" placeholder="Nome do membro"
+          class="flex-1 bg-dock-800 border border-slate-700 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-emerald-500" />
+        <button id="btn-add-member" type="button"
+          class="border-2 border-emerald-400 bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 font-medium px-3 py-2 rounded-md transition text-sm whitespace-nowrap">
+          + Adicionar
+        </button>
+      </div>
+    </div>
+  </div>
+
   <script>
     // ============ Estado ============
     let deadlines = [];
     let currentFilter = 'active';
+    let selectedDeadline = null;
 
     // ============ API ============
     const API = '/api/deadlines';
@@ -215,7 +273,8 @@
       if (total <= 0) return { percent: 0, color: '#ef4444', label: 'Inválido' };
 
       const remaining = due - now;
-      let percent = Math.max(0, Math.min(100, (remaining / total) * 100));
+      const elapsed = now - created;
+      let percent = Math.max(0, Math.min(100, (elapsed / total) * 100));
 
       // Dias restantes (baseado em quantidade absoluta de dias)
       const daysLeft = remaining / (1000 * 60 * 60 * 24);
@@ -224,7 +283,7 @@
       if (remaining <= 0) {
         color = '#ef4444';
         label = 'Atrasado';
-        percent = 0;
+        percent = 100;
       } else if (daysLeft > 30) {
         color = '#22c55e'; // verde
         label = 'Tranquilo';
@@ -279,10 +338,11 @@
 
         const overdueClass = !isFinished && remaining.overdue ? 'overdue-glow' : '';
         const finishedClass = isFinished ? 'finished-card' : '';
-        const pulse = !isFinished && urgency.percent < 10 && !remaining.overdue ? 'animate-pulse-urgent' : '';
+        const progress = isFinished ? 100 : overallPercent(d);
+        const barColor = isFinished ? '#64748b' : '#10b981';
 
         return `
-          <div class="card bg-dock-900 border border-slate-800 rounded-lg p-3 ${overdueClass} ${finishedClass}" data-id="${d.id}">
+          <div class="card bg-dock-900 border border-slate-800 rounded-lg p-3 ${overdueClass} ${finishedClass} cursor-pointer" data-id="${d.id}" onclick="openDetails(${d.id})">
             <div class="flex items-start justify-between gap-2">
               <div class="flex-1 min-w-0">
                 <div class="flex items-center gap-1.5 mb-0.5">
@@ -308,32 +368,32 @@
               </div>
             </div>
 
-            <!-- Barra de urgência -->
+            <!-- Barra de progresso (acompanha a do modal) -->
             <div class="mt-2">
               <div class="flex justify-between text-[10px] text-slate-500 mb-0.5">
-                <span>Urgência</span>
-                <span class="mono">${urgency.percent.toFixed(0)}%</span>
+                <span>Progresso</span>
+                <span class="mono">${progress}%</span>
               </div>
               <div class="bar-track">
-                <div class="bar-fill ${pulse}" style="width:${urgency.percent}%; background-color:${urgency.color}; color:${urgency.color}"></div>
+                <div class="bar-fill" style="width:${progress}%; background-color:${barColor}; color:${barColor}"></div>
               </div>
             </div>
 
             <!-- Ações -->
             <div class="mt-2 flex flex-wrap gap-1.5">
               ${!isFinished ? `
-                <button onclick="markFinished(${d.id})" class="text-[10px] px-2 py-1 rounded-md bg-emerald-600/20 text-emerald-400 border border-emerald-600/40 hover:bg-emerald-600/30 transition">
+                <button onclick="event.stopPropagation(); markFinished(${d.id})" class="text-[10px] px-2 py-1 rounded-md bg-emerald-600/20 text-emerald-400 border border-emerald-600/40 hover:bg-emerald-600/30 transition">
                   ✓ Finalizar
                 </button>
-                <button onclick="openEdit(${d.id})" class="text-[10px] px-2 py-1 rounded-md bg-slate-700/50 text-slate-300 border border-slate-600 hover:bg-slate-700 transition">
+                <button onclick="event.stopPropagation(); openEdit(${d.id})" class="text-[10px] px-2 py-1 rounded-md bg-slate-700/50 text-slate-300 border border-slate-600 hover:bg-slate-700 transition">
                   ✎ Editar
                 </button>
               ` : `
-                <button onclick="reopen(${d.id})" class="text-[10px] px-2 py-1 rounded-md bg-cyan-600/20 text-cyan-400 border border-cyan-600/40 hover:bg-cyan-600/30 transition">
+                <button onclick="event.stopPropagation(); reopen(${d.id})" class="text-[10px] px-2 py-1 rounded-md bg-cyan-600/20 text-cyan-400 border border-cyan-600/40 hover:bg-cyan-600/30 transition">
                   ↺ Reabrir
                 </button>
               `}
-              <button onclick="removeDeadline(${d.id})" class="text-[10px] px-2 py-1 rounded-md bg-red-600/10 text-red-400 border border-red-600/30 hover:bg-red-600/20 transition ml-auto">
+              <button onclick="event.stopPropagation(); removeDeadline(${d.id})" class="text-[10px] px-2 py-1 rounded-md bg-red-600/10 text-red-400 border border-red-600/30 hover:bg-red-600/20 transition ml-auto">
                 🗑
               </button>
             </div>
@@ -349,6 +409,135 @@
         .replace(/>/g, '&gt;')
         .replace(/"/g, '&quot;');
     }
+
+    // ============ Modal de detalhes & Etapas ============
+    const STEP_WEIGHTS = [10, 20, 30, 25, 15];
+    const STEP_NAMES = ['intro', 'work', 'prop', 'results', 'conclusion'];
+
+    function memberPercent(member) {
+      const steps = Array.isArray(member.steps) ? member.steps : [];
+      return steps.reduce((sum, idx) => sum + (STEP_WEIGHTS[idx] || 0), 0);
+    }
+
+    function overallPercent(deadline) {
+      const members = (deadline && deadline.members) || selectedDeadline.members || [];
+      if (members.length === 0) return 0;
+      const avg = members.reduce((sum, m) => sum + memberPercent(m), 0) / members.length;
+      return Math.max(0, Math.min(100, Math.round(avg)));
+    }
+
+    function openDetails(id) {
+      selectedDeadline = deadlines.find(d => d.id === id);
+      if (!selectedDeadline) return;
+
+      if (!selectedDeadline.members) selectedDeadline.members = [];
+      if (selectedDeadline.members.length === 0 && selectedDeadline.description) {
+        selectedDeadline.members = [{ name: selectedDeadline.description, steps: selectedDeadline.steps || [] }];
+      }
+
+      document.getElementById('detail-title').innerText = selectedDeadline.title;
+      renderMembers();
+      document.getElementById('modal-details').classList.remove('hidden');
+    }
+
+    function updateOverall() {
+      const pct = overallPercent();
+      document.getElementById('detail-percent').innerText = `${pct}%`;
+      document.getElementById('detail-bar').style.width = `${pct}%`;
+    }
+
+    function renderMembers() {
+      const container = document.getElementById('members-list');
+      const members = selectedDeadline.members || [];
+
+      if (members.length === 0) {
+        container.innerHTML = `<p class="text-xs text-slate-500 text-center py-3">Nenhum membro — adicione abaixo</p>`;
+        updateOverall();
+        return;
+      }
+
+      container.innerHTML = members.map((m, mi) => {
+        const pct = memberPercent(m);
+        return `
+          <div class="member-block">
+            <div class="flex items-center justify-between gap-2 mb-1.5">
+              <span class="member-name-text text-red-400 font-bold text-sm truncate">${escapeHtml(m.name)}</span>
+              <div class="flex items-center gap-2 shrink-0">
+                <span class="mono text-emerald-400 text-sm font-semibold">${pct}%</span>
+                <button type="button" onclick="event.stopPropagation(); removeMember(${mi})" class="text-[10px] px-1.5 py-0.5 rounded bg-red-600/10 text-red-400 border border-red-600/30 hover:bg-red-600/20 transition">🗑</button>
+              </div>
+            </div>
+            <div class="space-y-2.5 font-mono text-sm bg-dock-950 p-3 rounded-xl border border-slate-800">
+              ${STEP_NAMES.map((name, si) => `
+                <label class="flex items-center gap-2 cursor-pointer tree-line hover:text-white transition">
+                  <input type="checkbox" data-step="${si}" ${(m.steps || []).includes(si) ? 'checked' : ''}
+                    class="member-step rounded bg-dock-800 border-slate-700 text-emerald-500 focus:ring-0" />
+                  <span>${name}</span>
+                </label>
+              `).join('')}
+            </div>
+          </div>
+        `;
+      }).join('');
+      updateOverall();
+    }
+
+    function syncMembersFromDOM() {
+      const members = [];
+      document.querySelectorAll('#members-list .member-block').forEach(block => {
+        const name = block.querySelector('.member-name-text').textContent.trim();
+        const steps = [...block.querySelectorAll('.member-step')]
+          .filter(cb => cb.checked)
+          .map(cb => parseInt(cb.dataset.step))
+          .sort((a, b) => a - b);
+        members.push({ name, steps });
+      });
+      selectedDeadline.members = members;
+      updateDeadline(selectedDeadline.id, { members }).catch(e => console.log('Não foi possível salvar os membros:', e.message));
+    }
+
+    function removeMember(idx) {
+      selectedDeadline.members.splice(idx, 1);
+      renderMembers();
+      syncMembersFromDOM();
+    }
+
+    function addMember() {
+      const input = document.getElementById('new-member-name');
+      const name = input.value.trim();
+      if (!name) {
+        input.focus();
+        input.classList.remove('input-error');
+        void input.offsetWidth;
+        input.classList.add('input-error');
+        setTimeout(() => input.classList.remove('input-error'), 900);
+        return;
+      }
+      selectedDeadline.members.push({ name, steps: [] });
+      input.value = '';
+      renderMembers();
+      syncMembersFromDOM();
+    }
+
+    // Delegação de eventos nos checkboxes de etapas
+    document.getElementById('members-list').addEventListener('change', (e) => {
+      if (e.target && e.target.classList.contains('member-step')) {
+        syncMembersFromDOM();
+        renderMembers();
+      }
+    });
+
+    document.getElementById('btn-add-member').addEventListener('click', addMember);
+    document.getElementById('new-member-name').addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        addMember();
+      }
+    });
+
+    document.getElementById('btn-close-details').addEventListener('click', () => {
+      document.getElementById('modal-details').classList.add('hidden');
+    });
 
     // ============ Ações ============
     async function markFinished(id) {
@@ -394,6 +583,27 @@
     }
 
     // ============ Eventos ============
+    function addFormMember(name = '') {
+      const container = document.getElementById('form-members');
+      const row = document.createElement('div');
+      row.className = 'flex items-center gap-2';
+      row.innerHTML = `
+        <input type="text" value="${escapeHtml(name)}" placeholder="Membro"
+          class="member-name w-44 bg-dock-800 border border-slate-700 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-emerald-500" />
+        <button type="button" onclick="this.parentElement.remove()"
+          class="text-slate-500 hover:text-red-400 transition text-sm" title="Remover membro">✕</button>
+      `;
+      container.appendChild(row);
+      row.querySelector('input').focus();
+    }
+
+    function resetFormMembers() {
+      document.getElementById('form-members').innerHTML = '';
+      addFormMember();
+    }
+
+    document.getElementById('btn-add-form-member').addEventListener('click', () => addFormMember());
+
     document.getElementById('form-new').addEventListener('submit', async (e) => {
       e.preventDefault();
       const title = document.getElementById('new-title').value.trim();
@@ -404,9 +614,15 @@
       // Converte datetime-local para ISO UTC
       const due = new Date(dueLocal).toISOString();
 
+      const members = [...document.querySelectorAll('#form-members .member-name')]
+        .map(i => i.value.trim())
+        .filter(Boolean)
+        .map(name => ({ name, steps: [] }));
+
       try {
-        await createDeadline({ title, description, due_at: due });
+        await createDeadline({ title, description, due_at: due, members });
         document.getElementById('form-new').reset();
+        resetFormMembers();
         await fetchDeadlines();
       } catch (err) {
         alert(err.message);
@@ -453,6 +669,7 @@
     }
 
     // Init
+    resetFormMembers();
     fetchDeadlines().then(() => {
       tick();
       setInterval(tick, 1000);

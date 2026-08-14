@@ -38,9 +38,28 @@ def init_db():
                 due_at TEXT NOT NULL,
                 created_at TEXT NOT NULL,
                 updated_at TEXT NOT NULL,
-                finished_at TEXT
+                finished_at TEXT,
+                steps TEXT DEFAULT '[]',
+                members TEXT DEFAULT '[]'
             )
         """)
+        # Migração segura: adiciona as colunas se ainda não existirem
+        cols = [r[1] for r in conn.execute("PRAGMA table_info(deadlines)").fetchall()]
+        if "steps" not in cols:
+            conn.execute("ALTER TABLE deadlines ADD COLUMN steps TEXT DEFAULT '[]'")
+        if "members" not in cols:
+            conn.execute("ALTER TABLE deadlines ADD COLUMN members TEXT DEFAULT '[]'")
+        # Backfill: registros antigos sem membros viram um membro (nome = description)
+        rows = conn.execute(
+            "SELECT id, description, steps FROM deadlines WHERE members IS NULL OR members = '' OR members = '[]'"
+        ).fetchall()
+        for r in rows:
+            if r["description"] or (r["steps"] and r["steps"] != "[]"):
+                steps = normalize_steps(r["steps"])
+                members = json.dumps(
+                    [{"name": r["description"] or "Membro", "steps": steps}], ensure_ascii=False
+                )
+                conn.execute("UPDATE deadlines SET members = ? WHERE id = ?", (members, r["id"]))
         conn.commit()
 
 
@@ -48,7 +67,54 @@ def now_iso():
     return datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%S.%f")[:-3] + "Z"
 
 
+def normalize_steps(raw):
+    """Valida e normaliza a lista de índices das etapas marcadas (0-4)."""
+    if raw is None:
+        return []
+    if isinstance(raw, str):
+        try:
+            raw = json.loads(raw)
+        except (json.JSONDecodeError, TypeError):
+            return []
+    if not isinstance(raw, list):
+        return []
+    result = []
+    for item in raw:
+        try:
+            item = int(item)
+        except (TypeError, ValueError):
+            continue
+        if 0 <= item <= 4 and item not in result:
+            result.append(item)
+    return result
+
+
+def normalize_members(raw):
+    """Valida e normaliza a lista de membros: [{name, steps}, ...]"""
+    if raw is None:
+        return []
+    if isinstance(raw, str):
+        try:
+            raw = json.loads(raw)
+        except (json.JSONDecodeError, TypeError):
+            return []
+    if not isinstance(raw, list):
+        return []
+    result = []
+    for item in raw:
+        if not isinstance(item, dict):
+            continue
+        name = str(item.get("name") or "").strip()
+        if not name:
+            continue
+        steps = normalize_steps(item.get("steps"))
+        result.append({"name": name, "steps": steps})
+    return result
+
+
 def row_to_dict(row):
+    steps = normalize_steps(row["steps"]) if "steps" in row.keys() else []
+    members = normalize_members(row["members"]) if "members" in row.keys() else []
     return {
         "id": row["id"],
         "title": row["title"],
@@ -57,6 +123,8 @@ def row_to_dict(row):
         "created_at": row["created_at"],
         "updated_at": row["updated_at"],
         "finished_at": row["finished_at"],
+        "steps": steps,
+        "members": members,
     }
 
 
@@ -141,15 +209,22 @@ class DeadlineHandler(BaseHTTPRequestHandler):
             return
 
         description = (data.get("description") or "").strip()
+        steps = normalize_steps(data.get("steps"))
+        if "members" in data:
+            members = normalize_members(data["members"])
+        else:
+            members = [{"name": description, "steps": steps}] if description else []
         now = now_iso()
+        steps_json = json.dumps(steps, ensure_ascii=False)
+        members_json = json.dumps(members, ensure_ascii=False)
 
         with get_db() as conn:
             cur = conn.execute(
                 """
-                INSERT INTO deadlines (title, description, due_at, created_at, updated_at, finished_at)
-                VALUES (?, ?, ?, ?, ?, NULL)
+                INSERT INTO deadlines (title, description, due_at, created_at, updated_at, finished_at, steps, members)
+                VALUES (?, ?, ?, ?, ?, NULL, ?, ?)
                 """,
-                (title, description, due_at, now, now),
+                (title, description, due_at, now, now, steps_json, members_json),
             )
             new_id = cur.lastrowid
             conn.commit()
@@ -188,6 +263,20 @@ class DeadlineHandler(BaseHTTPRequestHandler):
             finished_at = row["finished_at"]
             now = now_iso()
 
+            # Steps: se enviadas, substitui; senão mantém
+            if "steps" in data:
+                steps = normalize_steps(data["steps"])
+            else:
+                steps = normalize_steps(row["steps"]) if "steps" in row.keys() else []
+            steps_json = json.dumps(steps, ensure_ascii=False)
+
+            # Members: se enviados, substitui; senão mantém
+            if "members" in data:
+                members = normalize_members(data["members"])
+            else:
+                members = normalize_members(row["members"]) if "members" in row.keys() else []
+            members_json = json.dumps(members, ensure_ascii=False)
+
             # Marcar como finalizado
             if data.get("finished") is True and not finished_at:
                 finished_at = now
@@ -202,10 +291,10 @@ class DeadlineHandler(BaseHTTPRequestHandler):
             conn.execute(
                 """
                 UPDATE deadlines
-                SET title = ?, description = ?, due_at = ?, updated_at = ?, finished_at = ?
+                SET title = ?, description = ?, due_at = ?, updated_at = ?, finished_at = ?, steps = ?, members = ?
                 WHERE id = ?
                 """,
-                (title, description, due_at, now, finished_at, deadline_id),
+                (title, description, due_at, now, finished_at, steps_json, members_json, deadline_id),
             )
             conn.commit()
             updated = conn.execute("SELECT * FROM deadlines WHERE id = ?", (deadline_id,)).fetchone()
