@@ -71,66 +71,162 @@
       border-color: #f87171 !important;
       box-shadow: 0 0 0 2px rgba(248,113,113,0.25);
     }
+
+    /* ============ Calendário ============ */
+    #cal-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 6px; }
+    .cal-head { text-align: center; font-size: 10px; color: #64748b; text-transform: uppercase; letter-spacing: 0.06em; padding: 4px 0; }
+    .cal-cell { background: #0f172a; border: 1px solid #1e293b; border-radius: 8px; min-height: 88px; padding: 6px; display: flex; flex-direction: column; gap: 3px; overflow: hidden; }
+    .cal-cell.today { border-color: #06b6d4; box-shadow: 0 0 0 1px #06b6d4; }
+    .cal-cell.empty { border-style: dashed; opacity: 0.35; }
+    .cal-date { font-size: 11px; color: #94a3b8; font-family: 'JetBrains Mono', monospace; }
+    .cal-chip { font-size: 9px; padding: 2px 4px; border-radius: 4px; border: 1px solid; text-align: left; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; cursor: pointer; transition: filter 0.15s; }
+    .cal-chip:hover { filter: brightness(1.3); }
+    .cal-more { font-size: 9px; color: #64748b; }
+
+    /* ============ Tema claro ============ */
+    html[data-theme="light"] body { background-color: #f1f5f9; color: #0f172a; }
+    html[data-theme="light"] .bg-dock-950 { background-color: #f1f5f9; }
+    html[data-theme="light"] .bg-dock-900 { background-color: #ffffff; }
+    html[data-theme="light"] .bg-dock-800 { background-color: #e2e8f0; }
+    html[data-theme="light"] .text-slate-100 { color: #0f172a; }
+    html[data-theme="light"] .text-slate-300 { color: #334155; }
+    html[data-theme="light"] .text-slate-400 { color: #64748b; }
+    html[data-theme="light"] .text-slate-500 { color: #64748b; }
+    html[data-theme="light"] .border-slate-800 { border-color: #e2e8f0; }
+    html[data-theme="light"] .border-slate-700 { border-color: #e2e8f0; }
+    html[data-theme="light"] .border-slate-600 { border-color: #e2e8f0; }
+    html[data-theme="light"] .bar-track { background: rgba(0,0,0,0.08); }
+    html[data-theme="light"] .card:hover { box-shadow: 0 8px 30px rgba(0,0,0,0.15); }
+    html[data-theme="light"] .cal-cell { background: #ffffff; border-color: #e2e8f0; }
+    html[data-theme="light"] .bg-black\/70, html[data-theme="light"] .bg-black\/75 { background: rgba(15,23,42,0.5); }
+    html[data-theme="light"] .bg-slate-700 { background-color: #cbd5e1; }
+    html[data-theme="light"] .bg-slate-800 { background-color: #e2e8f0; }
   </style>
 </head>
 <body class="bg-dock-950 text-slate-100 min-h-screen">
 
-  <main class="max-w-6xl mx-auto px-4 py-8">
-    <!-- Filtros -->
-    <div class="flex gap-2 mb-6">
-      <button data-filter="active" class="filter-btn px-4 py-1.5 rounded-full text-sm font-medium bg-cyan-600 text-white">Ativos</button>
-      <button data-filter="finished" class="filter-btn px-4 py-1.5 rounded-full text-sm font-medium bg-slate-700 text-slate-300 hover:bg-slate-600">Finalizados</button>
-      <button data-filter="all" class="filter-btn px-4 py-1.5 rounded-full text-sm font-medium bg-slate-700 text-slate-300 hover:bg-slate-600">Todos</button>
+  <!-- Cabeçalho -->
+  <header class="max-w-6xl mx-auto px-4 pt-6 pb-2 flex items-center justify-between gap-3 flex-wrap">
+    <h1 class="text-xl font-bold mono">🐳 Dockerman <span class="text-cyan-400">Deadlines</span></h1>
+    <div class="flex items-center gap-2">
+      <button id="btn-theme" title="Alternar tema" class="w-9 h-9 rounded-lg bg-slate-700 text-slate-300 hover:bg-slate-600 transition text-sm">☀️</button>
+      <button id="btn-export" class="text-xs px-3 py-2 rounded-lg bg-slate-700 text-slate-300 hover:bg-slate-600 transition">⬇ Exportar</button>
+      <button id="btn-import" class="text-xs px-3 py-2 rounded-lg bg-slate-700 text-slate-300 hover:bg-slate-600 transition">⬆ Importar</button>
+      <input type="file" id="file-import" accept=".json" class="hidden" />
     </div>
+  </header>
 
-    <!-- Lista de deadlines (barras primeiro) -->
-    <div id="list" class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-3 mb-10">
-      <!-- cards renderizados via JS -->
-    </div>
+  <!-- Abas -->
+  <nav class="max-w-6xl mx-auto px-4 mt-3 flex gap-2">
+    <button data-tab="list" class="tab-btn px-4 py-1.5 rounded-full text-sm font-medium bg-cyan-600 text-white">📋 Lista</button>
+    <button data-tab="calendar" class="tab-btn px-4 py-1.5 rounded-full text-sm font-medium bg-slate-700 text-slate-300 hover:bg-slate-600">📅 Calendário</button>
+    <button data-tab="reports" class="tab-btn px-4 py-1.5 rounded-full text-sm font-medium bg-slate-700 text-slate-300 hover:bg-slate-600">📊 Relatórios</button>
+  </nav>
 
-    <div id="empty" class="hidden text-center py-20 text-slate-500 mb-10">
-      <div class="text-5xl mb-4">📭</div>
-      <p class="text-lg">Nenhum deadline cadastrado</p>
-      <p class="text-sm mt-1">Adicione o primeiro abaixo</p>
-    </div>
+  <main class="max-w-6xl mx-auto px-4 py-6">
 
-     <!-- Form de novo deadline (Fundo da página, idêntico à caixa do rascunho com o botão verde no canto) -->
-    <section class="bg-dock-900 border border-slate-800 rounded-xl p-4 shadow-xl my-6">
-      <form id="form-new" class="grid grid-cols-1 md:grid-cols-12 gap-3 items-center">
-        <div class="md:col-span-4">
-          <input type="text" id="new-title" required placeholder="Título "
-            class="w-full bg-dock-800 border border-slate-700 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-emerald-500" />
-        </div>
-        <div class="md:col-span-3">
-          <input type="text" id="new-desc" placeholder="Descrição"
-            class="w-full bg-dock-800 border border-slate-700 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-emerald-500" />
-        </div>
-        <div class="md:col-span-3">
-          <input type="datetime-local" id="new-due" required
-            class="w-full bg-dock-800 border border-slate-700 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-emerald-500 text-slate-300" />
-        </div>
-        <div class="md:col-span-2">
-          <!-- Botão destacado estilo box verde da imagem -->
-          <button type="submit"
-            class="w-full border-2 border-emerald-400 bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 font-medium py-2 rounded-md transition text-sm flex items-center justify-center">
-            <span>+ Cadastrar</span>
-          </button>
-        </div>
-        <div class="md:col-span-12 flex flex-wrap items-center gap-2">
-          <!-- Membros: um campo para cada -->
-          <div id="form-members" class="flex flex-wrap items-center gap-2"></div>
-          <button type="button" id="btn-add-form-member"
-            class="border border-emerald-400/40 text-emerald-400 hover:bg-emerald-500/10 font-medium px-3 py-2 rounded-md transition text-sm">
-            + Membro
-          </button>
-        </div>
-      </form>
+    <!-- ============ VISÃO: LISTA ============ -->
+    <section id="view-list">
+      <!-- Filtros -->
+      <div class="flex flex-wrap items-center gap-2 mb-4">
+        <button data-filter="active" class="filter-btn px-4 py-1.5 rounded-full text-sm font-medium bg-cyan-600 text-white">Ativos</button>
+        <button data-filter="finished" class="filter-btn px-4 py-1.5 rounded-full text-sm font-medium bg-slate-700 text-slate-300 hover:bg-slate-600">Finalizados</button>
+        <button data-filter="all" class="filter-btn px-4 py-1.5 rounded-full text-sm font-medium bg-slate-700 text-slate-300 hover:bg-slate-600">Todos</button>
+        <input type="text" id="search-input" placeholder="🔍 Buscar por texto..."
+          class="bg-dock-800 border border-slate-700 rounded-md px-3 py-1.5 text-sm focus:outline-none focus:ring-1 focus:ring-cyan-500 w-48" />
+        <select id="sort-select"
+          class="bg-dock-800 border border-slate-700 rounded-md px-3 py-1.5 text-sm focus:outline-none focus:ring-1 focus:ring-cyan-500 text-slate-300">
+          <option value="due">Ordenar: Data</option>
+          <option value="priority">Ordenar: Prioridade</option>
+          <option value="title">Ordenar: Título</option>
+        </select>
+      </div>
+
+      <!-- Chips de tags (filtro) -->
+      <div id="tag-filter" class="flex flex-wrap gap-2 mb-4"></div>
+
+      <!-- Lista de deadlines -->
+      <div id="list" class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-3 mb-10">
+        <!-- cards renderizados via JS -->
+      </div>
+
+      <div id="empty" class="hidden text-center py-20 text-slate-500 mb-10">
+        <div class="text-5xl mb-4">📭</div>
+        <p class="text-lg">Nenhum deadline encontrado</p>
+        <p class="text-sm mt-1">Adicione o primeiro abaixo</p>
+      </div>
+
+      <!-- Form de novo deadline -->
+      <section class="bg-dock-900 border border-slate-800 rounded-xl p-4 shadow-xl my-6">
+        <form id="form-new" class="grid grid-cols-1 md:grid-cols-12 gap-3 items-center">
+          <div class="md:col-span-4">
+            <input type="text" id="new-title" required placeholder="Título "
+              class="w-full bg-dock-800 border border-slate-700 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-emerald-500" />
+          </div>
+          <div class="md:col-span-2">
+            <input type="text" id="new-desc" placeholder="Descrição"
+              class="w-full bg-dock-800 border border-slate-700 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-emerald-500" />
+          </div>
+          <div class="md:col-span-2">
+            <input type="datetime-local" id="new-due" required
+              class="w-full bg-dock-800 border border-slate-700 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-emerald-500 text-slate-300" />
+          </div>
+          <div class="md:col-span-2">
+            <select id="new-priority"
+              class="w-full bg-dock-800 border border-slate-700 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-emerald-500 text-slate-300">
+              <option value="medium">Prioridade: Média</option>
+              <option value="low">Prioridade: Baixa</option>
+              <option value="high">Prioridade: Alta</option>
+            </select>
+          </div>
+          <div class="md:col-span-2">
+            <button type="submit"
+              class="w-full border-2 border-emerald-400 bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 font-medium py-2 rounded-md transition text-sm flex items-center justify-center">
+              <span>+ Cadastrar</span>
+            </button>
+          </div>
+          <div class="md:col-span-12 flex flex-wrap items-center gap-2">
+            <input type="text" id="new-tags" placeholder="Tags (separadas por vírgula)"
+              class="w-full md:w-56 bg-dock-800 border border-slate-700 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-emerald-500" />
+            <input type="number" id="new-est" min="0" step="0.5" placeholder="Tempo est. (h)"
+              class="w-28 bg-dock-800 border border-slate-700 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-emerald-500 text-slate-300" />
+            <div id="form-members" class="flex flex-wrap items-center gap-2"></div>
+            <button type="button" id="btn-add-form-member"
+              class="border border-emerald-400/40 text-emerald-400 hover:bg-emerald-500/10 font-medium px-3 py-2 rounded-md transition text-sm">
+              + Membro
+            </button>
+          </div>
+        </form>
+      </section>
+    </section>
+
+    <!-- ============ VISÃO: CALENDÁRIO ============ -->
+    <section id="view-calendar" class="hidden">
+      <div class="flex items-center justify-between mb-4">
+        <button id="cal-prev" class="w-9 h-9 rounded-lg bg-slate-700 text-slate-300 hover:bg-slate-600 transition">◀</button>
+        <h3 id="cal-label" class="text-lg font-semibold mono"></h3>
+        <button id="cal-next" class="w-9 h-9 rounded-lg bg-slate-700 text-slate-300 hover:bg-slate-600 transition">▶</button>
+      </div>
+      <div id="cal-grid"></div>
+    </section>
+
+    <!-- ============ VISÃO: RELATÓRIOS ============ -->
+    <section id="view-reports" class="hidden">
+      <div id="stat-cards" class="grid grid-cols-2 md:grid-cols-5 gap-3 mb-6"></div>
+      <div class="bg-dock-900 border border-slate-800 rounded-xl p-4 mb-6">
+        <h3 class="text-sm font-semibold mb-3">📊 Últimos 6 meses (criados / concluídos / atrasados)</h3>
+        <div id="chart"></div>
+      </div>
+      <div class="bg-dock-900 border border-slate-800 rounded-xl p-4">
+        <h3 class="text-sm font-semibold mb-2">⏰ Próximos prazos</h3>
+        <div id="next-list"></div>
+      </div>
     </section>
   </main>
 
   <!-- Modal de edição -->
   <div id="modal" class="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
-    <div class="bg-dock-900 border border-slate-700 rounded-2xl w-full max-w-md p-6 shadow-2xl">
+    <div class="bg-dock-900 border border-slate-700 rounded-2xl w-full max-w-md p-6 shadow-2xl max-h-[90vh] overflow-y-auto">
       <h3 class="text-lg font-semibold mb-4">Editar Deadline</h3>
       <form id="form-edit" class="space-y-4">
         <input type="hidden" id="edit-id" />
@@ -149,6 +245,32 @@
           <input type="datetime-local" id="edit-due" required
             class="w-full bg-dock-800 border border-slate-700 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-cyan-500/50" />
         </div>
+        <div>
+          <label class="block text-xs text-slate-400 mb-1">Prioridade</label>
+          <select id="edit-priority"
+            class="w-full bg-dock-800 border border-slate-700 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-cyan-500/50 text-slate-300">
+            <option value="low">Baixa</option>
+            <option value="medium">Média</option>
+            <option value="high">Alta</option>
+          </select>
+        </div>
+        <div>
+          <label class="block text-xs text-slate-400 mb-1">Tags (separadas por vírgula)</label>
+          <input type="text" id="edit-tags"
+            class="w-full bg-dock-800 border border-slate-700 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-cyan-500/50" />
+        </div>
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block text-xs text-slate-400 mb-1">Tempo estimado (h)</label>
+            <input type="number" id="edit-est" min="0" step="0.5"
+              class="w-full bg-dock-800 border border-slate-700 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-cyan-500/50" />
+          </div>
+          <div>
+            <label class="block text-xs text-slate-400 mb-1">Tempo real (h)</label>
+            <input type="number" id="edit-actual" min="0" step="0.5"
+              class="w-full bg-dock-800 border border-slate-700 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-cyan-500/50" />
+          </div>
+        </div>
         <div class="flex gap-3 pt-2">
           <button type="button" id="btn-cancel-edit"
             class="flex-1 bg-slate-700 hover:bg-slate-600 py-2.5 rounded-lg text-sm font-medium">Cancelar</button>
@@ -159,41 +281,64 @@
     </div>
   </div>
 
-  <!-- Modal de detalhes com etapas e porcentagem -->
+  <!-- Modal de detalhes (etapas, tarefas, comentários, histórico) -->
   <div id="modal-details" class="fixed inset-0 bg-black/75 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
-    <div class="bg-dock-900 border border-slate-700 rounded-2xl w-full max-w-md p-6 shadow-2xl relative">
+    <div class="bg-dock-900 border border-slate-700 rounded-2xl w-full max-w-lg p-6 shadow-2xl relative max-h-[92vh] overflow-y-auto">
       <button id="btn-close-details" class="absolute top-4 right-4 text-slate-400 hover:text-white text-lg">✕</button>
 
-      <!-- Título principal -->
-      <h2 id="detail-title" class="text-2xl font-bold text-white mb-2 mono"></h2>
+      <h2 id="detail-title" class="text-2xl font-bold text-white mb-1 mono pr-6"></h2>
+      <div id="detail-meta" class="flex flex-wrap gap-x-3 gap-y-1 text-[11px] text-slate-400 mono mb-3"></div>
 
-      <!-- Porcentagem geral do projeto -->
+      <!-- Porcentagem geral -->
       <div class="flex items-center gap-2 text-lg font-semibold mb-2">
         <span id="detail-member" class="text-red-400 font-bold">Geral</span>
         <span class="text-slate-400">→</span>
         <span id="detail-percent" class="mono text-emerald-400">0%</span>
       </div>
-
-      <!-- Barra geral -->
-      <div class="mb-6">
+      <div class="mb-4">
         <div class="bar-track">
           <div id="detail-bar" class="bar-fill" style="width: 0%; background-color: #10b981; color: #10b981;"></div>
         </div>
       </div>
 
-      <!-- Lista de membros (renderizada via JS) -->
-      <div id="members-list" class="space-y-4 max-h-72 overflow-y-auto pr-1">
-        <!-- Renderizado via JS -->
+      <!-- Abas de detalhes -->
+      <div class="flex gap-2 mb-4 border-b border-slate-700 pb-3">
+        <button data-dtab="steps" class="dtab-btn px-3 py-1 rounded-full text-xs font-medium bg-cyan-600 text-white">✅ Etapas</button>
+        <button data-dtab="comments" class="dtab-btn px-3 py-1 rounded-full text-xs font-medium bg-slate-700 text-slate-300 hover:bg-slate-600">💬 Comentários <span id="comment-count" class="mono"></span></button>
+        <button data-dtab="history" class="dtab-btn px-3 py-1 rounded-full text-xs font-medium bg-slate-700 text-slate-300 hover:bg-slate-600">🕒 Histórico</button>
       </div>
 
-      <!-- Adicionar membro -->
-      <div class="mt-5 flex gap-2">
-        <input type="text" id="new-member-name" placeholder="Nome do membro"
-          class="flex-1 bg-dock-800 border border-slate-700 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-emerald-500" />
-        <button id="btn-add-member" type="button"
-          class="border-2 border-emerald-400 bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 font-medium px-3 py-2 rounded-md transition text-sm whitespace-nowrap">
-          + Adicionar
-        </button>
+      <!-- Aba: Etapas / Membros / Subtarefas -->
+      <div id="dtab-steps">
+        <div id="members-list" class="space-y-3 max-h-72 overflow-y-auto pr-1">
+          <!-- Renderizado via JS -->
+        </div>
+        <div class="mt-4 flex gap-2">
+          <input type="text" id="new-member-name" placeholder="Nome do membro"
+            class="flex-1 bg-dock-800 border border-slate-700 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-emerald-500" />
+          <button id="btn-add-member" type="button"
+            class="border-2 border-emerald-400 bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 font-medium px-3 py-2 rounded-md transition text-sm whitespace-nowrap">
+            + Adicionar
+          </button>
+        </div>
+      </div>
+
+      <!-- Aba: Comentários -->
+      <div id="dtab-comments" class="hidden">
+        <div id="comments-list" class="space-y-3 max-h-56 overflow-y-auto pr-1"></div>
+        <div class="mt-4 flex gap-2">
+          <input type="text" id="new-comment" placeholder="Escreva um comentário..."
+            class="flex-1 bg-dock-800 border border-slate-700 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-cyan-500" />
+          <button id="btn-add-comment" type="button"
+            class="bg-cyan-600 hover:bg-cyan-500 text-white font-medium px-4 py-2 rounded-md transition text-sm whitespace-nowrap">
+            Enviar
+          </button>
+        </div>
+      </div>
+
+      <!-- Aba: Histórico -->
+      <div id="dtab-history" class="hidden">
+        <div id="history-list" class="space-y-2 max-h-72 overflow-y-auto pr-1"></div>
       </div>
     </div>
   </div>
@@ -203,19 +348,32 @@
     let deadlines = [];
     let currentFilter = 'active';
     let selectedDeadline = null;
+    let searchQuery = '';
+    let selectedTag = null;
+    let sortBy = 'due';
+    let currentTab = 'list';
+    let detailsTab = 'steps';
+    let calYear, calMonth;
 
-    // ============ API ============
     const API = '/api/deadlines';
 
+    // ============ API ============
+    async function apiFetch(url, opts = {}) {
+      const res = await fetch(url, opts);
+      if (!res.ok) throw new Error('Falha na requisição');
+      return res;
+    }
+
     async function fetchDeadlines() {
-      const res = await fetch(API);
+      const res = await apiFetch(API);
       if (!res.ok) throw new Error('Falha ao carregar');
       deadlines = await res.json();
       render();
+      renderTagFilter();
     }
 
     async function createDeadline(data) {
-      const res = await fetch(API, {
+      const res = await apiFetch(API, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(data)
@@ -228,7 +386,7 @@
     }
 
     async function updateDeadline(id, data) {
-      const res = await fetch(`${API}/${id}`, {
+      const res = await apiFetch(`${API}/${id}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(data)
@@ -241,9 +399,22 @@
     }
 
     async function deleteDeadline(id) {
-      const res = await fetch(`${API}/${id}`, { method: 'DELETE' });
+      const res = await apiFetch(`${API}/${id}`, { method: 'DELETE' });
       if (!res.ok) throw new Error('Erro ao excluir');
       return res.json();
+    }
+
+    // ============ Cores de usuário (comentários/histórico) ============
+    function userColor(username) {
+      const h = (username || '?').split('').reduce((s, c) => s + c.charCodeAt(0), 0);
+      return ['#06b6d4', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#ec4899', '#14b8a6', '#f97316', '#3b82f6', '#84cc16'][h % 10];
+    }
+
+    // ============ Tema ============
+    function applyTheme() {
+      const theme = localStorage.getItem('dock_theme') || 'dark';
+      document.documentElement.setAttribute('data-theme', theme);
+      document.getElementById('btn-theme').textContent = theme === 'dark' ? '☀️' : '🌙';
     }
 
     // ============ Tempo & Cores ============
@@ -276,7 +447,6 @@
       const elapsed = now - created;
       let percent = Math.max(0, Math.min(100, (elapsed / total) * 100));
 
-      // Dias restantes (baseado em quantidade absoluta de dias)
       const daysLeft = remaining / (1000 * 60 * 60 * 24);
 
       let color, label;
@@ -285,17 +455,13 @@
         label = 'Atrasado';
         percent = 100;
       } else if (daysLeft > 30) {
-        color = '#22c55e'; // verde
-        label = 'Tranquilo';
+        color = '#22c55e'; label = 'Tranquilo';
       } else if (daysLeft > 15) {
-        color = '#eab308'; // amarelo
-        label = 'Atenção';
+        color = '#eab308'; label = 'Atenção';
       } else if (daysLeft > 7) {
-        color = '#f97316'; // laranja
-        label = 'Urgente';
+        color = '#f97316'; label = 'Urgente';
       } else {
-        color = '#ef4444'; // vermelho
-        label = 'Crítico';
+        color = '#ef4444'; label = 'Crítico';
       }
       return { percent, color, label };
     }
@@ -309,7 +475,17 @@
       });
     }
 
-    // ============ Render ============
+    const PRIORITY_META = {
+      high:   { label: 'Alta',  color: '#ef4444', order: 0 },
+      medium: { label: 'Média', color: '#f59e0b', order: 1 },
+      low:    { label: 'Baixa', color: '#22c55e', order: 2 },
+    };
+
+    function priorityMeta(p) {
+      return PRIORITY_META[p] || PRIORITY_META.medium;
+    }
+
+    // ============ Render (lista) ============
     function render() {
       const list = document.getElementById('list');
       const empty = document.getElementById('empty');
@@ -317,24 +493,49 @@
 
       let filtered = deadlines;
       if (currentFilter === 'active') {
-        filtered = deadlines.filter(d => !d.finished_at);
+        filtered = filtered.filter(d => !d.finished_at);
       } else if (currentFilter === 'finished') {
-        filtered = deadlines.filter(d => d.finished_at);
+        filtered = filtered.filter(d => d.finished_at);
       }
 
-      if (filtered.length === 0) {
+      const q = searchQuery.trim().toLowerCase();
+      if (q) {
+        filtered = filtered.filter(d =>
+          (d.title || '').toLowerCase().includes(q) ||
+          (d.description || '').toLowerCase().includes(q) ||
+          (d.tags || []).some(t => t.includes(q))
+        );
+      }
+      if (selectedTag) {
+        filtered = filtered.filter(d => (d.tags || []).includes(selectedTag));
+      }
+
+      const sorted = [...filtered];
+      if (sortBy === 'priority') {
+        sorted.sort((a, b) =>
+          priorityMeta(a.priority).order - priorityMeta(b.priority).order ||
+          new Date(a.due_at) - new Date(b.due_at));
+      } else if (sortBy === 'title') {
+        sorted.sort((a, b) => (a.title || '').localeCompare(b.title || '', 'pt-BR'));
+      } else {
+        sorted.sort((a, b) => new Date(a.due_at) - new Date(b.due_at));
+      }
+
+      if (sorted.length === 0) {
         list.innerHTML = '';
         empty.classList.remove('hidden');
         return;
       }
       empty.classList.add('hidden');
 
-      list.innerHTML = filtered.map(d => {
+      list.innerHTML = sorted.map(d => {
         const isFinished = !!d.finished_at;
         const remaining = formatRemaining(parseISO(d.due_at).getTime() - now);
         const urgency = isFinished
           ? { percent: 100, color: '#64748b', label: 'Finalizado' }
           : getUrgency(d.created_at, d.due_at, now);
+        const prio = priorityMeta(d.priority);
+        const members = d.members || [];
 
         const overdueClass = !isFinished && remaining.overdue ? 'overdue-glow' : '';
         const finishedClass = isFinished ? 'finished-card' : '';
@@ -345,17 +546,38 @@
           <div class="card bg-dock-900 border border-slate-800 rounded-lg p-3 ${overdueClass} ${finishedClass} cursor-pointer" data-id="${d.id}" onclick="openDetails(${d.id})">
             <div class="flex items-start justify-between gap-2">
               <div class="flex-1 min-w-0">
-                <div class="flex items-center gap-1.5 mb-0.5">
+                <div class="flex items-center gap-1.5 mb-0.5 flex-wrap">
                   <h3 class="font-semibold text-sm truncate leading-tight">${escapeHtml(d.title)}</h3>
                   <span class="text-[10px] px-1.5 py-0.5 rounded-full font-medium shrink-0" style="background:${urgency.color}22;color:${urgency.color}">
                     ${urgency.label}
+                  </span>
+                  <span class="text-[10px] px-1.5 py-0.5 rounded-full font-medium shrink-0" style="background:${prio.color}22;color:${prio.color}">
+                    ${prio.label}
                   </span>
                 </div>
                 ${d.description ? `<p class="text-xs text-slate-400 mb-1 truncate">${escapeHtml(d.description)}</p>` : ''}
                 <div class="flex flex-wrap gap-x-3 gap-y-0.5 text-[10px] text-slate-500 mono">
                   <span>📅 ${formatDate(d.due_at)}</span>
+                  ${(d.estimated_hours || d.actual_hours) ? `<span>⏱ ${d.estimated_hours || 0}h/${d.actual_hours || 0}h</span>` : ''}
                   ${isFinished ? `<span class="text-emerald-400">✓ ${formatDate(d.finished_at)}</span>` : ''}
                 </div>
+                ${(d.tags || []).length ? `
+                  <div class="flex flex-wrap gap-1 mt-1">
+                    ${d.tags.map(t => `
+                      <button onclick="event.stopPropagation(); toggleTag(this.dataset.tag)" data-tag="${escapeHtml(t)}"
+                        class="text-[10px] px-1.5 py-0.5 rounded bg-slate-800 border border-slate-700 text-cyan-400 hover:border-cyan-500 transition ${selectedTag === t ? 'border-cyan-500' : ''}">
+                        #${escapeHtml(t)}
+                      </button>
+                    `).join('')}
+                  </div>` : ''}
+                ${members.length ? `
+                  <div class="flex -space-x-1.5 mt-1.5">
+                    ${members.slice(0, 4).map(m => `
+                      <span class="w-5 h-5 rounded-full text-[9px] font-bold flex items-center justify-center border-2 border-dock-900"
+                        style="background:${m.color || '#64748b'}22;color:${m.color || '#64748b'}" title="${escapeHtml(m.name)}">${escapeHtml((m.name || '?').charAt(0).toUpperCase())}</span>
+                    `).join('')}
+                    ${members.length > 4 ? `<span class="w-5 h-5 rounded-full text-[9px] font-bold flex items-center justify-center bg-slate-700 text-slate-300 border-2 border-dock-900">+${members.length - 4}</span>` : ''}
+                  </div>` : ''}
               </div>
 
               <div class="text-right shrink-0">
@@ -368,7 +590,6 @@
               </div>
             </div>
 
-            <!-- Barra de progresso (acompanha a do modal) -->
             <div class="mt-2">
               <div class="flex justify-between text-[10px] text-slate-500 mb-0.5">
                 <span>Progresso</span>
@@ -379,7 +600,6 @@
               </div>
             </div>
 
-            <!-- Ações -->
             <div class="mt-2 flex flex-wrap gap-1.5">
               ${!isFinished ? `
                 <button onclick="event.stopPropagation(); markFinished(${d.id})" class="text-[10px] px-2 py-1 rounded-md bg-emerald-600/20 text-emerald-400 border border-emerald-600/40 hover:bg-emerald-600/30 transition">
@@ -402,6 +622,28 @@
       }).join('');
     }
 
+    function renderTagFilter() {
+      const container = document.getElementById('tag-filter');
+      const tags = [...new Set(deadlines.flatMap(d => d.tags || []))].sort((a, b) => a.localeCompare(b, 'pt-BR'));
+      if (tags.length === 0) {
+        container.innerHTML = '';
+        return;
+      }
+      const chipCls = (active) =>
+        `px-3 py-1 rounded-full text-xs font-medium border transition ${active ? 'bg-cyan-600 text-white border-cyan-600' : 'bg-slate-800 text-slate-300 border-slate-700 hover:border-cyan-500'}`;
+      let html = `<button data-tag="" class="${chipCls(!selectedTag)}">Todas</button>`;
+      tags.forEach(t => {
+        html += `<button data-tag="${escapeHtml(t)}" class="${chipCls(selectedTag === t)}">#${escapeHtml(t)}</button>`;
+      });
+      container.innerHTML = html;
+    }
+
+    function toggleTag(tag) {
+      selectedTag = selectedTag === tag ? null : tag;
+      renderTagFilter();
+      render();
+    }
+
     function escapeHtml(str) {
       return String(str)
         .replace(/&/g, '&amp;')
@@ -410,34 +652,67 @@
         .replace(/"/g, '&quot;');
     }
 
-    // ============ Modal de detalhes & Etapas ============
+    // ============ Modal de detalhes: Etapas & Tarefas ============
     const STEP_WEIGHTS = [10, 20, 30, 25, 15];
     const STEP_NAMES = ['intro', 'work', 'prop', 'results', 'conclusion'];
 
-    function memberPercent(member) {
-      const steps = Array.isArray(member.steps) ? member.steps : [];
-      return steps.reduce((sum, idx) => sum + (STEP_WEIGHTS[idx] || 0), 0);
+    function memberPercent(m) {
+      const steps = Array.isArray(m.steps) ? m.steps : [];
+      const stepsPct = steps.reduce((sum, idx) => sum + (STEP_WEIGHTS[idx] || 0), 0);
+      const tasks = Array.isArray(m.tasks) ? m.tasks : [];
+      if (tasks.length === 0) return stepsPct;
+      const tasksPct = Math.round(tasks.filter(t => t.done).length / tasks.length * 100);
+      if (steps.length === 0) return tasksPct;
+      return Math.round(stepsPct * 0.7 + tasksPct * 0.3);
     }
 
     function overallPercent(deadline) {
-      const members = (deadline && deadline.members) || selectedDeadline.members || [];
+      const members = (deadline && deadline.members) || (selectedDeadline && selectedDeadline.members) || [];
       if (members.length === 0) return 0;
       const avg = members.reduce((sum, m) => sum + memberPercent(m), 0) / members.length;
       return Math.max(0, Math.min(100, Math.round(avg)));
     }
 
-    function openDetails(id) {
+    async function openDetails(id) {
       selectedDeadline = deadlines.find(d => d.id === id);
       if (!selectedDeadline) return;
 
       if (!selectedDeadline.members) selectedDeadline.members = [];
+      selectedDeadline.members.forEach(m => {
+        m.tasks = m.tasks || [];
+        m.color = m.color || '#06b6d4';
+      });
       if (selectedDeadline.members.length === 0 && selectedDeadline.description) {
-        selectedDeadline.members = [{ name: selectedDeadline.description, steps: selectedDeadline.steps || [] }];
+        selectedDeadline.members = [{ name: selectedDeadline.description, steps: selectedDeadline.steps || [], tasks: [], color: '#06b6d4' }];
       }
 
       document.getElementById('detail-title').innerText = selectedDeadline.title;
+      document.getElementById('detail-meta').innerHTML = `
+        <span>📅 ${formatDate(selectedDeadline.due_at)}</span>
+        ${selectedDeadline.finished_at ? `<span class="text-emerald-400">✓ Finalizado ${formatDate(selectedDeadline.finished_at)}</span>` : ''}
+        ${(selectedDeadline.estimated_hours || selectedDeadline.actual_hours) ? `<span>⏱ ${selectedDeadline.estimated_hours || 0}h / ${selectedDeadline.actual_hours || 0}h</span>` : ''}
+        <span style="color:${priorityMeta(selectedDeadline.priority).color}">${priorityMeta(selectedDeadline.priority).label}</span>
+        ${(selectedDeadline.tags || []).map(t => `<span class="text-cyan-400">#${escapeHtml(t)}</span>`).join('')}
+      `;
+
+      setDetailsTab('steps');
       renderMembers();
       document.getElementById('modal-details').classList.remove('hidden');
+      await Promise.all([loadComments(), loadHistory()]);
+    }
+
+    function setDetailsTab(tab) {
+      detailsTab = tab;
+      document.querySelectorAll('.dtab-btn').forEach(b => {
+        const active = b.dataset.dtab === tab;
+        b.classList.toggle('bg-cyan-600', active);
+        b.classList.toggle('text-white', active);
+        b.classList.toggle('bg-slate-700', !active);
+        b.classList.toggle('text-slate-300', !active);
+      });
+      ['steps', 'comments', 'history'].forEach(v => {
+        document.getElementById('dtab-' + v).classList.toggle('hidden', v !== tab);
+      });
     }
 
     function updateOverall() {
@@ -458,16 +733,22 @@
 
       container.innerHTML = members.map((m, mi) => {
         const pct = memberPercent(m);
+        const color = m.color || '#06b6d4';
+        const initial = (m.name || '?').charAt(0).toUpperCase();
         return `
-          <div class="member-block">
-            <div class="flex items-center justify-between gap-2 mb-1.5">
-              <span class="member-name-text text-red-400 font-bold text-sm truncate">${escapeHtml(m.name)}</span>
-              <div class="flex items-center gap-2 shrink-0">
-                <span class="mono text-emerald-400 text-sm font-semibold">${pct}%</span>
-                <button type="button" onclick="event.stopPropagation(); removeMember(${mi})" class="text-[10px] px-1.5 py-0.5 rounded bg-red-600/10 text-red-400 border border-red-600/30 hover:bg-red-600/20 transition">🗑</button>
+          <div class="member-block bg-dock-950 rounded-xl border border-slate-800 p-3">
+            <div class="flex items-center justify-between gap-2 mb-2">
+              <div class="flex items-center gap-2 min-w-0">
+                <span class="w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold shrink-0"
+                  style="background:${color}26;color:${color}">${escapeHtml(initial)}</span>
+                <span class="member-name-text text-red-400 font-bold text-sm truncate">${escapeHtml(m.name)}</span>
+                <span class="mono text-emerald-400 text-xs font-semibold shrink-0">${pct}%</span>
               </div>
+              <button type="button" onclick="event.stopPropagation(); removeMember(${mi})"
+                class="text-[10px] px-1.5 py-0.5 rounded bg-red-600/10 text-red-400 border border-red-600/30 hover:bg-red-600/20 transition shrink-0">🗑</button>
             </div>
-            <div class="space-y-2.5 font-mono text-sm bg-dock-950 p-3 rounded-xl border border-slate-800">
+
+            <div class="space-y-2.5 font-mono text-sm">
               ${STEP_NAMES.map((name, si) => `
                 <label class="flex items-center gap-2 cursor-pointer tree-line hover:text-white transition">
                   <input type="checkbox" data-step="${si}" ${(m.steps || []).includes(si) ? 'checked' : ''}
@@ -476,6 +757,24 @@
                 </label>
               `).join('')}
             </div>
+
+            <div class="mt-3 border-t border-slate-800 pt-2 space-y-1.5">
+              ${(m.tasks || []).map((t, ti) => `
+                <div class="task-item flex items-center gap-2" data-text="${escapeHtml(t.text)}">
+                  <input type="checkbox" ${t.done ? 'checked' : ''}
+                    class="task-check rounded bg-dock-800 border-slate-700 text-cyan-500 focus:ring-0 shrink-0" />
+                  <span class="text-xs font-mono truncate ${t.done ? 'line-through text-slate-500' : ''}">${escapeHtml(t.text)}</span>
+                  <button type="button" onclick="event.stopPropagation(); removeTask(${mi}, ${ti})"
+                    class="text-slate-500 hover:text-red-400 text-xs ml-auto shrink-0">✕</button>
+                </div>
+              `).join('')}
+              <div class="flex gap-1.5 pt-1">
+                <input type="text" id="task-input-${mi}" placeholder="Nova subtarefa..."
+                  class="flex-1 bg-dock-800 border border-slate-700 rounded px-2 py-1 text-xs focus:outline-none focus:ring-1 focus:ring-cyan-500" />
+                <button type="button" onclick="event.stopPropagation(); addTask(${mi})"
+                  class="text-[10px] px-2 py-1 rounded bg-cyan-600/20 text-cyan-400 border border-cyan-600/40 hover:bg-cyan-600/30 transition shrink-0">+</button>
+              </div>
+            </div>
           </div>
         `;
       }).join('');
@@ -483,14 +782,19 @@
     }
 
     function syncMembersFromDOM() {
-      const members = [];
-      document.querySelectorAll('#members-list .member-block').forEach(block => {
+      const blocks = document.querySelectorAll('#members-list .member-block');
+      const members = [...blocks].map((block, mi) => {
+        const prev = (selectedDeadline.members && selectedDeadline.members[mi]) || {};
         const name = block.querySelector('.member-name-text').textContent.trim();
         const steps = [...block.querySelectorAll('.member-step')]
           .filter(cb => cb.checked)
           .map(cb => parseInt(cb.dataset.step))
           .sort((a, b) => a - b);
-        members.push({ name, steps });
+        const tasks = [...block.querySelectorAll('.task-item')].map(ti => ({
+          text: ti.dataset.text,
+          done: ti.querySelector('.task-check').checked,
+        }));
+        return { name, steps, tasks, color: prev.color };
       });
       selectedDeadline.members = members;
       updateDeadline(selectedDeadline.id, { members }).catch(e => console.log('Não foi possível salvar os membros:', e.message));
@@ -513,31 +817,105 @@
         setTimeout(() => input.classList.remove('input-error'), 900);
         return;
       }
-      selectedDeadline.members.push({ name, steps: [] });
+      selectedDeadline.members.push({ name, steps: [], tasks: [], color: '#06b6d4' });
       input.value = '';
       renderMembers();
       syncMembersFromDOM();
     }
 
-    // Delegação de eventos nos checkboxes de etapas
-    document.getElementById('members-list').addEventListener('change', (e) => {
-      if (e.target && e.target.classList.contains('member-step')) {
-        syncMembersFromDOM();
-        renderMembers();
-      }
-    });
+    function addTask(mi) {
+      const input = document.getElementById('task-input-' + mi);
+      if (!input) return;
+      const text = input.value.trim();
+      if (!text) return;
+      selectedDeadline.members[mi].tasks.push({ text, done: false });
+      input.value = '';
+      renderMembers();
+      syncMembersFromDOM();
+    }
 
-    document.getElementById('btn-add-member').addEventListener('click', addMember);
-    document.getElementById('new-member-name').addEventListener('keydown', (e) => {
-      if (e.key === 'Enter') {
-        e.preventDefault();
-        addMember();
-      }
-    });
+    function removeTask(mi, ti) {
+      selectedDeadline.members[mi].tasks.splice(ti, 1);
+      renderMembers();
+      syncMembersFromDOM();
+    }
 
-    document.getElementById('btn-close-details').addEventListener('click', () => {
-      document.getElementById('modal-details').classList.add('hidden');
-    });
+    // ============ Comentários ============
+    async function loadComments() {
+      const list = await apiFetch(`${API}/${selectedDeadline.id}/comments`).then(r => r.json());
+      selectedDeadline.comments = list;
+      renderComments();
+    }
+
+    function renderComments() {
+      const list = selectedDeadline.comments || [];
+      document.getElementById('comment-count').textContent = list.length ? `(${list.length})` : '';
+      const container = document.getElementById('comments-list');
+      if (list.length === 0) {
+        container.innerHTML = `<p class="text-xs text-slate-500 text-center py-3">Sem comentários ainda</p>`;
+        return;
+      }
+      container.innerHTML = list.map(c => {
+        const color = userColor(c.user);
+        return `
+          <div class="flex gap-2 items-start">
+            <span class="w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-bold shrink-0 border border-slate-700"
+              style="background:${color}26;color:${color}">${escapeHtml((c.user || '?').charAt(0).toUpperCase())}</span>
+            <div class="flex-1 min-w-0">
+              <div class="flex items-baseline gap-2">
+                <span class="text-xs font-semibold" style="color:${color}">${escapeHtml(c.user)}</span>
+                <span class="text-[10px] text-slate-500 mono">${formatDate(c.created_at)}</span>
+              </div>
+              <p class="text-xs text-slate-300 break-words">${escapeHtml(c.text)}</p>
+            </div>
+            <button onclick="removeComment(${c.id})" class="text-[10px] text-slate-500 hover:text-red-400 shrink-0" title="Excluir">🗑</button>
+          </div>`;
+      }).join('');
+    }
+
+    async function addComment() {
+      const input = document.getElementById('new-comment');
+      const text = input.value.trim();
+      if (!text) return;
+      await apiFetch(`${API}/${selectedDeadline.id}/comments`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ text })
+      });
+      input.value = '';
+      await loadComments();
+    }
+
+    async function removeComment(id) {
+      if (!confirm('Excluir comentário?')) return;
+      await apiFetch(`/api/comments/${id}`, { method: 'DELETE' });
+      await loadComments();
+    }
+
+    // ============ Histórico ============
+    async function loadHistory() {
+      const rows = await apiFetch(`${API}/${selectedDeadline.id}/history`).then(r => r.json());
+      renderHistory(rows);
+    }
+
+    function renderHistory(rows) {
+      const container = document.getElementById('history-list');
+      if (rows.length === 0) {
+        container.innerHTML = `<p class="text-xs text-slate-500 text-center py-3">Sem alterações registradas</p>`;
+        return;
+      }
+      const icon = { criou: '➕', atualizou: '✏️', finalizou: '✅', reabriu: '↺', excluiu: '🗑', comentou: '💬', importou: '📥' };
+      container.innerHTML = rows.map(h => `
+        <div class="flex items-start gap-2 text-xs">
+          <span class="shrink-0">${icon[h.action] || '•'}</span>
+          <div class="min-w-0">
+            <span class="font-semibold" style="color:${userColor(h.user)}">${escapeHtml(h.user)}</span>
+            <span class="text-slate-300">${escapeHtml(h.action)}</span>
+            ${h.detail ? `<span class="text-slate-500">— ${escapeHtml(h.detail)}</span>` : ''}
+            <div class="text-[10px] text-slate-500 mono">${formatDate(h.created_at)}</div>
+          </div>
+        </div>`).join('');
+    }
 
     // ============ Ações ============
     async function markFinished(id) {
@@ -574,12 +952,145 @@
       document.getElementById('edit-id').value = id;
       document.getElementById('edit-title').value = d.title;
       document.getElementById('edit-desc').value = d.description || '';
-      // datetime-local precisa de formato local sem Z
       const due = parseISO(d.due_at);
       const local = new Date(due.getTime() - due.getTimezoneOffset() * 60000)
         .toISOString().slice(0, 16);
       document.getElementById('edit-due').value = local;
+      document.getElementById('edit-priority').value = d.priority || 'medium';
+      document.getElementById('edit-tags').value = (d.tags || []).join(', ');
+      document.getElementById('edit-est').value = d.estimated_hours || '';
+      document.getElementById('edit-actual').value = d.actual_hours || '';
       document.getElementById('modal').classList.remove('hidden');
+    }
+
+    // ============ Calendário ============
+    const MONTH_NAMES = ['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
+    const WEEK_DAYS = ['Dom','Seg','Ter','Qua','Qui','Sex','Sáb'];
+
+    function localDateKey(iso) {
+      const d = parseISO(iso);
+      return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+    }
+
+    function renderCalendar() {
+      const now = new Date();
+      if (calYear === undefined) { calYear = now.getFullYear(); calMonth = now.getMonth(); }
+      document.getElementById('cal-label').textContent = `${MONTH_NAMES[calMonth]} ${calYear}`;
+
+      const byDay = {};
+      deadlines.forEach(d => {
+        const k = localDateKey(d.due_at);
+        (byDay[k] = byDay[k] || []).push(d);
+      });
+
+      const offset = new Date(calYear, calMonth, 1).getDay();
+      const daysInMonth = new Date(calYear, calMonth + 1, 0).getDate();
+      const todayKey = localDateKey(now.toISOString());
+      const nowMs = now.getTime();
+
+      let html = WEEK_DAYS.map(w => `<div class="cal-head">${w}</div>`).join('');
+      for (let i = 0; i < offset; i++) html += `<div class="cal-cell empty"></div>`;
+      for (let day = 1; day <= daysInMonth; day++) {
+        const key = `${calYear}-${String(calMonth + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+        const items = byDay[key] || [];
+        html += `<div class="cal-cell ${key === todayKey ? 'today' : ''}">
+          <div class="cal-date">${day}</div>
+          ${items.slice(0, 3).map(d => {
+            const overdue = !d.finished_at && parseISO(d.due_at).getTime() < nowMs;
+            const color = d.finished_at ? '#64748b' : (overdue ? '#ef4444' : getUrgency(d.created_at, d.due_at, nowMs).color);
+            return `<button onclick="openDetails(${d.id})" class="cal-chip" style="background:${color}26;color:${color};border-color:${color}55" title="${escapeHtml(d.title)}">${escapeHtml(d.title)}</button>`;
+          }).join('')}
+          ${items.length > 3 ? `<div class="cal-more">+${items.length - 3} mais</div>` : ''}
+        </div>`;
+      }
+      const total = offset + daysInMonth;
+      const rem = total % 7 === 0 ? 0 : 7 - (total % 7);
+      for (let i = 0; i < rem; i++) html += `<div class="cal-cell empty"></div>`;
+      document.getElementById('cal-grid').innerHTML = html;
+    }
+
+    // ============ Relatórios ============
+    function buildChart(months) {
+      const W = 660, H = 250, padL = 36, padR = 10, padT = 16, padB = 30;
+      const innerW = W - padL - padR, innerH = H - padT - padB;
+      const maxV = Math.max(1, ...months.flatMap(m => [m.criados, m.concluidos, m.atrasados]));
+      const groupW = innerW / months.length;
+      const barW = Math.min(26, groupW / 3.6);
+      const colors = { criados: '#06b6d4', concluidos: '#22c55e', atrasados: '#ef4444' };
+
+      let html = `<svg viewBox="0 0 ${W} ${H}" class="w-full">
+        <text x="${padL - 8}" y="${padT - 2}" font-size="11" fill="#64748b">${maxV}</text>
+        <text x="${padL - 8}" y="${padT + innerH / 2 + 3}" font-size="11" fill="#64748b">${Math.round(maxV / 2)}</text>
+        <text x="${padL - 8}" y="${padT + innerH + 8}" font-size="11" fill="#64748b">0</text>
+        <line x1="${padL}" y1="${padT}" x2="${padL + innerW}" y2="${padT}" stroke="#334155" stroke-width="1"/>
+        <line x1="${padL}" y1="${padT + innerH / 2}" x2="${padL + innerW}" y2="${padT + innerH / 2}" stroke="#334155" stroke-width="1" stroke-dasharray="3,3"/>
+        <line x1="${padL}" y1="${padT + innerH}" x2="${padL + innerW}" y2="${padT + innerH}" stroke="#334155" stroke-width="1"/>`;
+
+      months.forEach((m, i) => {
+        const cx = padL + i * groupW + groupW / 2;
+        ['criados', 'concluidos', 'atrasados'].forEach((k, bi) => {
+          const v = m[k];
+          const h = v * innerH / maxV;
+          const x = cx - (barW * 3) / 2 + bi * barW + bi * 1.5;
+          html += `<rect x="${x}" y="${padT + innerH - h}" width="${barW}" height="${h}" fill="${colors[k]}" rx="2"><title>${k}: ${v}</title></rect>`;
+          if (v > 0) html += `<text x="${x + barW / 2}" y="${padT + innerH - h - 4}" font-size="9" fill="#94a3b8" text-anchor="middle">${v}</text>`;
+        });
+        html += `<text x="${cx}" y="${padT + innerH + 18}" font-size="10" fill="#94a3b8" text-anchor="middle">${m.label}</text>`;
+      });
+      html += `</svg>
+        <div class="flex gap-4 justify-center mt-2 text-xs text-slate-400">
+          <span><span class="inline-block w-2.5 h-2.5 rounded-sm mr-1" style="background:#06b6d4"></span>Criados</span>
+          <span><span class="inline-block w-2.5 h-2.5 rounded-sm mr-1" style="background:#22c55e"></span>Concluídos</span>
+          <span><span class="inline-block w-2.5 h-2.5 rounded-sm mr-1" style="background:#ef4444"></span>Atrasados</span>
+        </div>`;
+      return html;
+    }
+
+    function renderReports() {
+      const now = Date.now();
+      const total = deadlines.length;
+      const active = deadlines.filter(d => !d.finished_at).length;
+      const finished = deadlines.filter(d => d.finished_at).length;
+      const overdue = deadlines.filter(d => !d.finished_at && parseISO(d.due_at).getTime() < now).length;
+      const rate = total ? Math.round(finished / total * 100) : 0;
+
+      const stats = [
+        { label: 'Total', value: total, color: '#06b6d4' },
+        { label: 'Ativos', value: active, color: '#f59e0b' },
+        { label: 'Finalizados', value: finished, color: '#22c55e' },
+        { label: 'Atrasados', value: overdue, color: '#ef4444' },
+        { label: 'Taxa de conclusão', value: rate + '%', color: '#8b5cf6' },
+      ];
+      document.getElementById('stat-cards').innerHTML = stats.map(s => `
+        <div class="bg-dock-900 border border-slate-800 rounded-xl p-4 text-center">
+          <div class="text-2xl font-bold mono" style="color:${s.color}">${s.value}</div>
+          <div class="text-xs text-slate-500 mt-1">${s.label}</div>
+        </div>`).join('');
+
+      const months = [];
+      const m0 = new Date();
+      for (let i = 5; i >= 0; i--) {
+        const d = new Date(m0.getFullYear(), m0.getMonth() - i, 1);
+        months.push({ year: d.getFullYear(), month: d.getMonth() });
+      }
+      const inMonth = (iso, y, m) => { if (!iso) return false; const d = parseISO(iso); return d.getFullYear() === y && d.getMonth() === m; };
+      const monthData = months.map(mm => ({
+        label: MONTH_NAMES[mm.month].slice(0, 3),
+        criados: deadlines.filter(d => inMonth(d.created_at, mm.year, mm.month)).length,
+        concluidos: deadlines.filter(d => inMonth(d.finished_at, mm.year, mm.month)).length,
+        atrasados: deadlines.filter(d => !d.finished_at && inMonth(d.due_at, mm.year, mm.month) && parseISO(d.due_at).getTime() < now).length,
+      }));
+      document.getElementById('chart').innerHTML = buildChart(monthData);
+
+      const next = deadlines.filter(d => !d.finished_at)
+        .sort((a, b) => parseISO(a.due_at) - parseISO(b.due_at)).slice(0, 5);
+      document.getElementById('next-list').innerHTML = next.length ? next.map(d => {
+        const color = getUrgency(d.created_at, d.due_at, now).color;
+        return `<div class="flex items-center justify-between gap-2 text-xs py-1.5 border-b border-slate-800 last:border-0">
+          <span class="truncate">${escapeHtml(d.title)}</span>
+          <span class="mono shrink-0" style="color:${color}">${formatDate(d.due_at)}</span>
+        </div>`;
+      }).join('') : `<p class="text-xs text-slate-500 text-center py-3">Nenhum prazo ativo</p>`;
     }
 
     // ============ Eventos ============
@@ -589,7 +1100,7 @@
       row.className = 'flex items-center gap-2';
       row.innerHTML = `
         <input type="text" value="${escapeHtml(name)}" placeholder="Membro"
-          class="member-name w-44 bg-dock-800 border border-slate-700 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-emerald-500" />
+          class="member-name w-40 bg-dock-800 border border-slate-700 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-emerald-500" />
         <button type="button" onclick="this.parentElement.remove()"
           class="text-slate-500 hover:text-red-400 transition text-sm" title="Remover membro">✕</button>
       `;
@@ -602,81 +1113,231 @@
       addFormMember();
     }
 
-    document.getElementById('btn-add-form-member').addEventListener('click', () => addFormMember());
+    function bindEvents() {
+      document.getElementById('btn-add-form-member').addEventListener('click', () => addFormMember());
 
-    document.getElementById('form-new').addEventListener('submit', async (e) => {
-      e.preventDefault();
-      const title = document.getElementById('new-title').value.trim();
-      const description = document.getElementById('new-desc').value.trim();
-      const dueLocal = document.getElementById('new-due').value;
-      if (!title || !dueLocal) return;
+      document.getElementById('form-new').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const title = document.getElementById('new-title').value.trim();
+        const description = document.getElementById('new-desc').value.trim();
+        const dueLocal = document.getElementById('new-due').value;
+        if (!title || !dueLocal) return;
 
-      // Converte datetime-local para ISO UTC
-      const due = new Date(dueLocal).toISOString();
+        const due = new Date(dueLocal).toISOString();
+        const members = [...document.querySelectorAll('#form-members .member-name')]
+          .map(i => i.value.trim())
+          .filter(Boolean)
+          .map(name => ({ name, steps: [], tasks: [] }));
+        const tags = document.getElementById('new-tags').value.split(',').map(t => t.trim()).filter(Boolean);
+        const priority = document.getElementById('new-priority').value;
+        const estimated_hours = parseFloat(document.getElementById('new-est').value) || 0;
 
-      const members = [...document.querySelectorAll('#form-members .member-name')]
-        .map(i => i.value.trim())
-        .filter(Boolean)
-        .map(name => ({ name, steps: [] }));
+        try {
+          await createDeadline({ title, description, due_at: due, members, tags, priority, estimated_hours });
+          document.getElementById('form-new').reset();
+          document.getElementById('new-tags').value = '';
+          resetFormMembers();
+          await fetchDeadlines();
+        } catch (err) {
+          alert(err.message);
+        }
+      });
 
-      try {
-        await createDeadline({ title, description, due_at: due, members });
-        document.getElementById('form-new').reset();
-        resetFormMembers();
-        await fetchDeadlines();
-      } catch (err) {
-        alert(err.message);
-      }
-    });
+      document.getElementById('form-edit').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const id = parseInt(document.getElementById('edit-id').value);
+        const title = document.getElementById('edit-title').value.trim();
+        const description = document.getElementById('edit-desc').value.trim();
+        const dueLocal = document.getElementById('edit-due').value;
+        const due = new Date(dueLocal).toISOString();
+        const tags = document.getElementById('edit-tags').value.split(',').map(t => t.trim()).filter(Boolean);
+        const priority = document.getElementById('edit-priority').value;
+        const estimated_hours = parseFloat(document.getElementById('edit-est').value) || 0;
+        const actual_hours = parseFloat(document.getElementById('edit-actual').value) || 0;
 
-    document.getElementById('form-edit').addEventListener('submit', async (e) => {
-      e.preventDefault();
-      const id = parseInt(document.getElementById('edit-id').value);
-      const title = document.getElementById('edit-title').value.trim();
-      const description = document.getElementById('edit-desc').value.trim();
-      const dueLocal = document.getElementById('edit-due').value;
-      const due = new Date(dueLocal).toISOString();
+        try {
+          await updateDeadline(id, { title, description, due_at: due, tags, priority, estimated_hours, actual_hours });
+          document.getElementById('modal').classList.add('hidden');
+          await fetchDeadlines();
+        } catch (err) {
+          alert(err.message);
+        }
+      });
 
-      try {
-        await updateDeadline(id, { title, description, due_at: due });
+      document.getElementById('btn-cancel-edit').addEventListener('click', () => {
         document.getElementById('modal').classList.add('hidden');
-        await fetchDeadlines();
-      } catch (err) {
-        alert(err.message);
-      }
-    });
+      });
 
-    document.getElementById('btn-cancel-edit').addEventListener('click', () => {
-      document.getElementById('modal').classList.add('hidden');
-    });
-
-    document.querySelectorAll('.filter-btn').forEach(btn => {
-      btn.addEventListener('click', () => {
-        currentFilter = btn.dataset.filter;
-        document.querySelectorAll('.filter-btn').forEach(b => {
-          b.classList.remove('bg-cyan-600', 'text-white');
-          b.classList.add('bg-slate-700', 'text-slate-300');
+      document.querySelectorAll('.filter-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+          currentFilter = btn.dataset.filter;
+          document.querySelectorAll('.filter-btn').forEach(b => {
+            b.classList.remove('bg-cyan-600', 'text-white');
+            b.classList.add('bg-slate-700', 'text-slate-300');
+          });
+          btn.classList.remove('bg-slate-700', 'text-slate-300');
+          btn.classList.add('bg-cyan-600', 'text-white');
+          render();
         });
-        btn.classList.remove('bg-slate-700', 'text-slate-300');
-        btn.classList.add('bg-cyan-600', 'text-white');
+      });
+
+      document.getElementById('search-input').addEventListener('input', (e) => {
+        searchQuery = e.target.value;
         render();
       });
-    });
 
-    // Continuous update (a cada 1s)
-    function tick() {
-      render(); // re-render para atualizar barras e tempos
+      document.getElementById('sort-select').addEventListener('change', (e) => {
+        sortBy = e.target.value;
+        render();
+      });
+
+      document.getElementById('tag-filter').addEventListener('click', (e) => {
+        const btn = e.target.closest('[data-tag]');
+        if (!btn) return;
+        toggleTag(btn.dataset.tag || null);
+      });
+
+      // Abas principais
+      document.querySelectorAll('.tab-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+          currentTab = btn.dataset.tab;
+          document.querySelectorAll('.tab-btn').forEach(b => {
+            const active = b.dataset.tab === currentTab;
+            b.classList.toggle('bg-cyan-600', active);
+            b.classList.toggle('text-white', active);
+            b.classList.toggle('bg-slate-700', !active);
+            b.classList.toggle('text-slate-300', !active);
+          });
+          ['list', 'calendar', 'reports'].forEach(v => {
+            document.getElementById('view-' + v).classList.toggle('hidden', v !== currentTab);
+          });
+          if (currentTab === 'calendar') renderCalendar();
+          if (currentTab === 'reports') renderReports();
+        });
+      });
+
+      // Calendário: navegação
+      document.getElementById('cal-prev').addEventListener('click', () => {
+        calMonth--;
+        if (calMonth < 0) { calMonth = 11; calYear--; }
+        renderCalendar();
+      });
+      document.getElementById('cal-next').addEventListener('click', () => {
+        calMonth++;
+        if (calMonth > 11) { calMonth = 0; calYear++; }
+        renderCalendar();
+      });
+
+      // Tema
+      document.getElementById('btn-theme').addEventListener('click', () => {
+        const theme = document.documentElement.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
+        localStorage.setItem('dock_theme', theme);
+        applyTheme();
+      });
+
+      // Exportar / Importar
+      document.getElementById('btn-export').addEventListener('click', async () => {
+        try {
+          const data = await apiFetch('/api/export').then(r => r.json());
+          const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+          const a = document.createElement('a');
+          a.href = URL.createObjectURL(blob);
+          a.download = `deadlines-backup-${new Date().toISOString().slice(0, 10)}.json`;
+          a.click();
+          URL.revokeObjectURL(a.href);
+        } catch (e) { alert(e.message); }
+      });
+
+      document.getElementById('btn-import').addEventListener('click', () => {
+        document.getElementById('file-import').click();
+      });
+
+      document.getElementById('file-import').addEventListener('change', async (e) => {
+        const file = e.target.files[0];
+        e.target.value = '';
+        if (!file) return;
+        if (!confirm('Importar substituirá TODOS os dados atuais. Continuar?')) return;
+        try {
+          const data = JSON.parse(await file.text());
+          const res = await apiFetch('/api/import', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(data)
+          });
+          if (!res.ok) {
+            const err = await res.json();
+            throw new Error(err.error || 'Falha na importação');
+          }
+          const j = await res.json();
+          alert(`Importados ${j.deadlines} deadlines e ${j.comments} comentários.`);
+          await fetchDeadlines();
+          if (currentTab === 'reports') renderReports();
+          if (currentTab === 'calendar') renderCalendar();
+        } catch (err) {
+          alert('Falha na importação: ' + err.message);
+        }
+      });
+
+      // Modal de detalhes
+      document.getElementById('btn-close-details').addEventListener('click', () => {
+        document.getElementById('modal-details').classList.add('hidden');
+      });
+
+      document.querySelectorAll('.dtab-btn').forEach(btn => {
+        btn.addEventListener('click', () => setDetailsTab(btn.dataset.dtab));
+      });
+
+      document.getElementById('members-list').addEventListener('change', (e) => {
+        if (e.target && (e.target.classList.contains('member-step') || e.target.classList.contains('task-check'))) {
+          syncMembersFromDOM();
+          renderMembers();
+        }
+      });
+
+      document.getElementById('members-list').addEventListener('keydown', (e) => {
+        if (e.key === 'Enter' && e.target.id && e.target.id.startsWith('task-input-')) {
+          e.preventDefault();
+          addTask(parseInt(e.target.id.replace('task-input-', '')));
+        }
+      });
+
+      document.getElementById('btn-add-member').addEventListener('click', addMember);
+      document.getElementById('new-member-name').addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') {
+          e.preventDefault();
+          addMember();
+        }
+      });
+
+      document.getElementById('btn-add-comment').addEventListener('click', addComment);
+      document.getElementById('new-comment').addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') {
+          e.preventDefault();
+          addComment();
+        }
+      });
     }
 
-    // Init
-    resetFormMembers();
-    fetchDeadlines().then(() => {
-      tick();
-      setInterval(tick, 1000);
-    }).catch(err => {
-      console.error(err);
-      document.getElementById('list').innerHTML = `<p class="text-red-400">Erro ao conectar com a API. Verifique se o servidor está rodando.</p>`;
-    });
+    // Update contínuo (a cada 1s)
+    function tick() {
+      render();
+    }
+
+    // ============ Init ============
+    function init() {
+      applyTheme();
+      bindEvents();
+      resetFormMembers();
+      fetchDeadlines().then(() => {
+        tick();
+        setInterval(tick, 1000);
+      }).catch(err => {
+        console.error(err);
+        document.getElementById('list').innerHTML = `<p class="text-red-400">Erro ao conectar com a API. Verifique se o servidor está rodando.</p>`;
+      });
+    }
+
+    init();
   </script>
 </body>
 </html>
