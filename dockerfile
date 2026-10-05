@@ -6,13 +6,19 @@ LABEL description="Sistema de deadlines com contagem regressiva contínua"
 
 WORKDIR /app
 
-COPY app.py .
+ENV PYTHONDONTWRITEBYTECODE=1 \
+    PYTHONUNBUFFERED=1 \
+    PORT=9999 \
+    DATA_DIR=/app/data
+
+COPY app.py ./
 COPY public/ ./public/
 
-RUN mkdir -p /app/data
+RUN mkdir -p /app/data \
+  && useradd --system --uid 10001 --no-create-home appuser \
+  && chown -R appuser:appuser /app
 
-ENV PORT=9999
-ENV DATA_DIR=/app/data
+USER appuser
 
 EXPOSE 9999
 

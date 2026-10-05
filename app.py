@@ -169,6 +169,7 @@ MEMBER_COLORS = [
     "#06b6d4", "#10b981", "#f59e0b", "#ef4444", "#8b5cf6",
     "#ec4899", "#14b8a6", "#f97316", "#3b82f6", "#84cc16",
 ]
+MEMBER_STEP_WEIGHTS = [10, 20, 30, 25, 15]
 
 
 def normalize_color(raw, name):
@@ -178,8 +179,27 @@ def normalize_color(raw, name):
     return MEMBER_COLORS[h % len(MEMBER_COLORS)]
 
 
+def normalize_percent(raw):
+    try:
+        value = float(raw)
+    except (TypeError, ValueError):
+        return 0.0
+    return round(max(0.0, min(100.0, value)), 1)
+
+
+def legacy_member_percent(steps, tasks):
+    """Converte dados antigos de etapas/tarefas para o progresso direto."""
+    steps_percent = sum(MEMBER_STEP_WEIGHTS[idx] for idx in steps if 0 <= idx < len(MEMBER_STEP_WEIGHTS))
+    if not tasks:
+        return steps_percent
+    tasks_percent = round(sum(1 for task in tasks if task["done"]) / len(tasks) * 100)
+    if not steps:
+        return tasks_percent
+    return round(steps_percent * 0.7 + tasks_percent * 0.3)
+
+
 def normalize_members(raw):
-    """Valida e normaliza a lista de membros: [{name, steps, tasks, color}, ...]"""
+    """Valida e normaliza a lista de membros com progresso de 0 a 100%."""
     if raw is None:
         return []
     if isinstance(raw, str):
@@ -199,7 +219,8 @@ def normalize_members(raw):
         steps = normalize_steps(item.get("steps"))
         tasks = normalize_tasks(item.get("tasks"))
         color = normalize_color(item.get("color"), name)
-        result.append({"name": name, "steps": steps, "tasks": tasks, "color": color})
+        percent = normalize_percent(item["percent"] if "percent" in item else legacy_member_percent(steps, tasks))
+        result.append({"name": name, "percent": percent, "steps": steps, "tasks": tasks, "color": color})
     return result
 
 

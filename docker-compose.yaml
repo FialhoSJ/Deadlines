@@ -1,15 +1,17 @@
 # Dockerman Deadline System
 services:
   deadlines:
-    build: .
-    container_name: Dockerman-deadlines
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: deadlines
     ports:
-      - "9991:9999"
+      - "8080:9999"
     volumes:
       - deadlines-data:/app/data
     environment:
-      - PORT=9999
-      - DATA_DIR=/app/data
+      PORT: 9999
+      DATA_DIR: /app/data
     restart: unless-stopped
     develop:
       watch:
@@ -19,7 +21,7 @@ services:
         - path: ./public
           target: /app/public
           action: sync
-        - path: ./dockerfile
+        - path: ./Dockerfile
           action: rebuild
 
 volumes:

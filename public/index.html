@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Dockerman • Deadlines</title>
+  <title>Deadlines</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <script>
     tailwind.config = {
@@ -101,26 +101,85 @@
     html[data-theme="light"] .bg-black\/70, html[data-theme="light"] .bg-black\/75 { background: rgba(15,23,42,0.5); }
     html[data-theme="light"] .bg-slate-700 { background-color: #cbd5e1; }
     html[data-theme="light"] .bg-slate-800 { background-color: #e2e8f0; }
+
+    /* ============ Refinamento visual ============ */
+    :root { color-scheme: dark; }
+    body {
+      background-image: radial-gradient(circle at 10% -10%, rgba(6,182,212,.11), transparent 32rem),
+        radial-gradient(circle at 90% 0%, rgba(16,185,129,.07), transparent 28rem);
+    }
+    .page-header {
+      border-bottom: 1px solid rgba(51,65,85,.55);
+      background: rgba(10,15,26,.72);
+      backdrop-filter: blur(16px);
+    }
+    .page-kicker { color: #67e8f9; font-size: 10px; font-weight: 700; letter-spacing: .18em; text-transform: uppercase; }
+    .page-title { letter-spacing: -.035em; }
+    .panel {
+      background: rgba(15,23,42,.82);
+      border: 1px solid rgba(51,65,85,.72);
+      border-radius: 18px;
+      box-shadow: 0 18px 50px rgba(0,0,0,.16);
+    }
+    .toolbar { background: rgba(15,23,42,.62); border: 1px solid rgba(51,65,85,.62); border-radius: 14px; }
+    .field-label { display: block; margin-bottom: .4rem; color: #94a3b8; font-size: 10px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; }
+    .field-control {
+      width: 100%; border: 1px solid #334155; border-radius: 10px; background: #1e293b;
+      padding: .7rem .8rem; color: #f8fafc; font-size: .875rem; outline: none; transition: border-color .2s, box-shadow .2s;
+    }
+    .field-control::placeholder { color: #64748b; }
+    .field-control:focus { border-color: #22d3ee; box-shadow: 0 0 0 3px rgba(34,211,238,.12); }
+    .new-deadline-grid { display: grid; grid-template-columns: minmax(0, 1.65fr) minmax(0, 1.2fr) minmax(190px, .95fr) minmax(150px, .7fr) auto; gap: 12px; align-items: end; }
+    .new-deadline-extra { display: block; }
+    .member-entry { border: 1px dashed #475569; background: rgba(30,41,59,.4); border-radius: 12px; padding: .7rem; }
+    .member-entry input { min-width: 0; }
+    .member-block { background: rgba(10,15,26,.55); border-color: rgba(51,65,85,.78); }
+    .member-progress-row { padding: .55rem .65rem; border-radius: 10px; background: rgba(30,41,59,.42); }
+    .member-progress-fill { height: 100%; border-radius: 999px; background: linear-gradient(90deg, #06b6d4, #10b981); transition: width .25s ease; }
+    .percent-range { accent-color: #10b981; }
+    .percent-number { width: 58px; text-align: right; }
+    .details-summary { border: 1px solid rgba(34,211,238,.18); background: linear-gradient(135deg, rgba(6,182,212,.1), rgba(16,185,129,.06)); border-radius: 14px; }
+    .celebration-image { max-height: 300px; width: 100%; object-fit: contain; border-radius: 14px; background: #0a0f1a; }
+    .celebration-pop { animation: celebration-pop .35s ease-out both; }
+    @keyframes celebration-pop { from { opacity: 0; transform: scale(.94) translateY(10px); } to { opacity: 1; transform: scale(1) translateY(0); } }
+    .overdue-meme-strip { display: flex; align-items: center; gap: 10px; margin-top: 12px; padding: 8px; overflow: hidden; border: 1px solid rgba(239,68,68,.28); border-radius: 12px; background: linear-gradient(100deg, rgba(127,29,29,.3), rgba(30,41,59,.42)); animation: overdue-pulse 2.5s ease-in-out infinite; }
+    .overdue-meme-thumb { width: 48px; height: 48px; flex: 0 0 48px; object-fit: cover; border-radius: 9px; border: 1px solid rgba(248,113,113,.5); }
+    .comic-bubble { position: relative; display: inline-block; padding: 7px 11px; border: 2px solid #f8fafc; border-radius: 16px; background: #f8fafc; color: #111827; font-size: 11px; font-weight: 800; line-height: 1.1; transform: rotate(-2deg); box-shadow: 3px 3px 0 rgba(248,113,113,.6); }
+    .comic-bubble::after { content: ''; position: absolute; left: 14px; bottom: -7px; width: 12px; height: 12px; border-right: 2px solid #f8fafc; border-bottom: 2px solid #f8fafc; background: #f8fafc; transform: rotate(45deg); }
+    .overdue-stage { position: relative; padding: 8px 4px 4px; }
+    .overdue-stage .celebration-image { animation: overdue-wiggle 1.7s ease-in-out infinite; }
+    .overdue-stage .comic-bubble { position: absolute; top: 0; right: 0; z-index: 1; max-width: 58%; font-size: 13px; }
+    .celebration-stage { position: relative; padding: 8px 4px 4px; }
+    .celebration-stage .celebration-image { animation: overdue-wiggle 1.7s ease-in-out infinite; }
+    .celebration-stage .comic-bubble { position: absolute; top: 0; right: 0; z-index: 1; max-width: 64%; font-size: 13px; }
+    @keyframes overdue-pulse { 0%, 100% { box-shadow: 0 0 0 rgba(239,68,68,0); } 50% { box-shadow: 0 0 18px rgba(239,68,68,.12); } }
+    @keyframes overdue-wiggle { 0%, 100% { transform: rotate(0deg) scale(1); } 50% { transform: rotate(-1.5deg) scale(1.015); } }
+    @media (max-width: 900px) { .new-deadline-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } .new-deadline-grid > :last-child { grid-column: span 2; } }
+    @media (max-width: 640px) { .new-deadline-grid, .new-deadline-extra { grid-template-columns: 1fr; } .new-deadline-grid > :last-child { grid-column: auto; } }
+    html[data-theme="light"] body { background-image: radial-gradient(circle at 10% -10%, rgba(6,182,212,.12), transparent 32rem); }
+    html[data-theme="light"] .page-header { background: rgba(241,245,249,.82); }
+    html[data-theme="light"] .panel, html[data-theme="light"] .toolbar { background: rgba(255,255,255,.84); }
+    html[data-theme="light"] .field-control { background: #f8fafc; color: #0f172a; }
+    html[data-theme="light"] .member-entry, html[data-theme="light"] .member-progress-row { background: rgba(226,232,240,.5); }
   </style>
 </head>
 <body class="bg-dock-950 text-slate-100 min-h-screen">
 
   <!-- Cabeçalho -->
-  <header class="max-w-6xl mx-auto px-4 pt-6 pb-2 flex items-center justify-between gap-3 flex-wrap">
-    <h1 class="text-xl font-bold mono">🐳 Dockerman <span class="text-cyan-400">Deadlines</span></h1>
-    <div class="flex items-center gap-2">
+  <header class="page-header">
+    <div class="max-w-6xl mx-auto px-4 py-3 flex items-center justify-end gap-2">
       <button id="btn-theme" title="Alternar tema" class="w-9 h-9 rounded-lg bg-slate-700 text-slate-300 hover:bg-slate-600 transition text-sm">☀️</button>
-      <button id="btn-export" class="text-xs px-3 py-2 rounded-lg bg-slate-700 text-slate-300 hover:bg-slate-600 transition">⬇ Exportar</button>
-      <button id="btn-import" class="text-xs px-3 py-2 rounded-lg bg-slate-700 text-slate-300 hover:bg-slate-600 transition">⬆ Importar</button>
+      <button id="btn-export" class="text-xs px-3 py-2 rounded-lg bg-slate-700 text-slate-300 hover:bg-slate-600 transition">Exportar</button>
+      <button id="btn-import" class="text-xs px-3 py-2 rounded-lg bg-slate-700 text-slate-300 hover:bg-slate-600 transition">Importar</button>
       <input type="file" id="file-import" accept=".json" class="hidden" />
     </div>
   </header>
 
   <!-- Abas -->
-  <nav class="max-w-6xl mx-auto px-4 mt-3 flex gap-2">
-    <button data-tab="list" class="tab-btn px-4 py-1.5 rounded-full text-sm font-medium bg-cyan-600 text-white">📋 Lista</button>
-    <button data-tab="calendar" class="tab-btn px-4 py-1.5 rounded-full text-sm font-medium bg-slate-700 text-slate-300 hover:bg-slate-600">📅 Calendário</button>
-    <button data-tab="reports" class="tab-btn px-4 py-1.5 rounded-full text-sm font-medium bg-slate-700 text-slate-300 hover:bg-slate-600">📊 Relatórios</button>
+  <nav class="max-w-6xl mx-auto px-4 pt-5 flex gap-2">
+    <button data-tab="list" class="tab-btn px-4 py-2 rounded-lg text-sm font-medium bg-cyan-600 text-white">Lista de prazos</button>
+    <button data-tab="calendar" class="tab-btn px-4 py-2 rounded-lg text-sm font-medium bg-slate-700 text-slate-300 hover:bg-slate-600">Calendário</button>
+    <button data-tab="reports" class="tab-btn px-4 py-2 rounded-lg text-sm font-medium bg-slate-700 text-slate-300 hover:bg-slate-600">Relatórios</button>
   </nav>
 
   <main class="max-w-6xl mx-auto px-4 py-6">
@@ -128,17 +187,17 @@
     <!-- ============ VISÃO: LISTA ============ -->
     <section id="view-list">
       <!-- Filtros -->
-      <div class="flex flex-wrap items-center gap-2 mb-4">
+      <div class="toolbar flex flex-wrap items-center gap-2 p-3 mb-5">
         <button data-filter="active" class="filter-btn px-4 py-1.5 rounded-full text-sm font-medium bg-cyan-600 text-white">Ativos</button>
         <button data-filter="finished" class="filter-btn px-4 py-1.5 rounded-full text-sm font-medium bg-slate-700 text-slate-300 hover:bg-slate-600">Finalizados</button>
         <button data-filter="all" class="filter-btn px-4 py-1.5 rounded-full text-sm font-medium bg-slate-700 text-slate-300 hover:bg-slate-600">Todos</button>
-        <input type="text" id="search-input" placeholder="🔍 Buscar por texto..."
-          class="bg-dock-800 border border-slate-700 rounded-md px-3 py-1.5 text-sm focus:outline-none focus:ring-1 focus:ring-cyan-500 w-48" />
+        <input type="text" id="search-input" placeholder="Buscar prazo ou membro..."
+          class="field-control w-52" />
         <select id="sort-select"
-          class="bg-dock-800 border border-slate-700 rounded-md px-3 py-1.5 text-sm focus:outline-none focus:ring-1 focus:ring-cyan-500 text-slate-300">
-          <option value="due">Ordenar: Data</option>
-          <option value="priority">Ordenar: Prioridade</option>
-          <option value="title">Ordenar: Título</option>
+          class="field-control w-auto py-2">
+          <option value="due">Ordenar por data</option>
+          <option value="priority">Ordenar por prioridade</option>
+          <option value="title">Ordenar por título</option>
         </select>
       </div>
 
@@ -157,44 +216,53 @@
       </div>
 
       <!-- Form de novo deadline -->
-      <section class="bg-dock-900 border border-slate-800 rounded-xl p-4 shadow-xl my-6">
-        <form id="form-new" class="grid grid-cols-1 md:grid-cols-12 gap-3 items-center">
-          <div class="md:col-span-4">
-            <input type="text" id="new-title" required placeholder="Título "
-              class="w-full bg-dock-800 border border-slate-700 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-emerald-500" />
+      <section class="panel p-5 shadow-xl my-8">
+        <div class="flex items-start justify-between gap-4 mb-5">
+          <div>
+            <h2 class="text-lg font-semibold text-white">Adicionar deadline</h2>
+            <p class="text-xs text-slate-400 mt-1">Cadastre o prazo e associe as pessoas responsáveis pelo projeto.</p>
           </div>
-          <div class="md:col-span-2">
-            <input type="text" id="new-desc" placeholder="Descrição"
-              class="w-full bg-dock-800 border border-slate-700 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-emerald-500" />
+          <span class="hidden sm:block text-[10px] uppercase tracking-widest text-slate-500">Campos principais</span>
+        </div>
+        <form id="form-new" class="space-y-4">
+          <div class="new-deadline-grid">
+            <div>
+              <label class="field-label" for="new-title">Título</label>
+              <input type="text" id="new-title" required placeholder="Ex.: Entrega da apresentação" class="field-control" />
+            </div>
+            <div>
+              <label class="field-label" for="new-desc">Descrição</label>
+              <input type="text" id="new-desc" placeholder="Contexto breve" class="field-control" />
+            </div>
+            <div>
+              <label class="field-label" for="new-due">Data e hora limite</label>
+              <input type="datetime-local" id="new-due" required class="field-control text-slate-300" />
+            </div>
+            <div>
+              <label class="field-label" for="new-priority">Prioridade</label>
+              <select id="new-priority" class="field-control text-slate-300">
+                <option value="medium">Média</option>
+                <option value="low">Baixa</option>
+                <option value="high">Alta</option>
+              </select>
+            </div>
+            <button type="submit" class="h-[42px] border border-emerald-400/60 bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-300 font-semibold px-4 rounded-lg transition text-sm whitespace-nowrap">Cadastrar prazo</button>
           </div>
-          <div class="md:col-span-2">
-            <input type="datetime-local" id="new-due" required
-              class="w-full bg-dock-800 border border-slate-700 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-emerald-500 text-slate-300" />
+          <div class="new-deadline-extra">
+            <div>
+              <label class="field-label" for="new-tags">Tags</label>
+              <input type="text" id="new-tags" placeholder="Ex.: site, campanha, cliente" class="field-control" />
+            </div>
           </div>
-          <div class="md:col-span-2">
-            <select id="new-priority"
-              class="w-full bg-dock-800 border border-slate-700 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-emerald-500 text-slate-300">
-              <option value="medium">Prioridade: Média</option>
-              <option value="low">Prioridade: Baixa</option>
-              <option value="high">Prioridade: Alta</option>
-            </select>
-          </div>
-          <div class="md:col-span-2">
-            <button type="submit"
-              class="w-full border-2 border-emerald-400 bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 font-medium py-2 rounded-md transition text-sm flex items-center justify-center">
-              <span>+ Cadastrar</span>
-            </button>
-          </div>
-          <div class="md:col-span-12 flex flex-wrap items-center gap-2">
-            <input type="text" id="new-tags" placeholder="Tags (separadas por vírgula)"
-              class="w-full md:w-56 bg-dock-800 border border-slate-700 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-emerald-500" />
-            <input type="number" id="new-est" min="0" step="0.5" placeholder="Tempo est. (h)"
-              class="w-28 bg-dock-800 border border-slate-700 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-emerald-500 text-slate-300" />
-            <div id="form-members" class="flex flex-wrap items-center gap-2"></div>
-            <button type="button" id="btn-add-form-member"
-              class="border border-emerald-400/40 text-emerald-400 hover:bg-emerald-500/10 font-medium px-3 py-2 rounded-md transition text-sm">
-              + Membro
-            </button>
+          <div class="member-entry">
+            <div class="flex items-center justify-between gap-3 mb-3">
+              <div>
+                <p class="text-sm font-medium text-slate-200">Membros do projeto</p>
+                <p class="text-xs text-slate-500 mt-0.5">Você poderá ajustar o percentual de cada pessoa no acompanhamento.</p>
+              </div>
+              <button type="button" id="btn-add-form-member" class="border border-cyan-400/40 text-cyan-300 hover:bg-cyan-500/10 font-medium px-3 py-2 rounded-lg transition text-xs whitespace-nowrap">+ Adicionar membro</button>
+            </div>
+            <div id="form-members" class="grid grid-cols-1 md:grid-cols-2 gap-2"></div>
           </div>
         </form>
       </section>
@@ -227,98 +295,87 @@
   <!-- Modal de edição -->
   <div id="modal" class="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
     <div class="bg-dock-900 border border-slate-700 rounded-2xl w-full max-w-md p-6 shadow-2xl max-h-[90vh] overflow-y-auto">
-      <h3 class="text-lg font-semibold mb-4">Editar Deadline</h3>
+      <h3 class="text-xl font-semibold mb-5">Editar deadline</h3>
       <form id="form-edit" class="space-y-4">
         <input type="hidden" id="edit-id" />
         <div>
-          <label class="block text-xs text-slate-400 mb-1">Título</label>
+          <label class="field-label" for="edit-title">Título</label>
           <input type="text" id="edit-title" required
-            class="w-full bg-dock-800 border border-slate-700 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-cyan-500/50" />
+            class="field-control" />
         </div>
         <div>
-          <label class="block text-xs text-slate-400 mb-1">Descrição</label>
+          <label class="field-label" for="edit-desc">Descrição</label>
           <input type="text" id="edit-desc"
-            class="w-full bg-dock-800 border border-slate-700 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-cyan-500/50" />
+            class="field-control" />
         </div>
         <div>
-          <label class="block text-xs text-slate-400 mb-1">Nova data limite</label>
+          <label class="field-label" for="edit-due">Data e hora limite</label>
           <input type="datetime-local" id="edit-due" required
-            class="w-full bg-dock-800 border border-slate-700 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-cyan-500/50" />
+            class="field-control text-slate-300" />
         </div>
         <div>
-          <label class="block text-xs text-slate-400 mb-1">Prioridade</label>
+          <label class="field-label" for="edit-priority">Prioridade</label>
           <select id="edit-priority"
-            class="w-full bg-dock-800 border border-slate-700 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-cyan-500/50 text-slate-300">
+            class="field-control text-slate-300">
             <option value="low">Baixa</option>
             <option value="medium">Média</option>
             <option value="high">Alta</option>
           </select>
         </div>
         <div>
-          <label class="block text-xs text-slate-400 mb-1">Tags (separadas por vírgula)</label>
+          <label class="field-label" for="edit-tags">Tags</label>
           <input type="text" id="edit-tags"
-            class="w-full bg-dock-800 border border-slate-700 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-cyan-500/50" />
-        </div>
-        <div class="grid grid-cols-2 gap-3">
-          <div>
-            <label class="block text-xs text-slate-400 mb-1">Tempo estimado (h)</label>
-            <input type="number" id="edit-est" min="0" step="0.5"
-              class="w-full bg-dock-800 border border-slate-700 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-cyan-500/50" />
-          </div>
-          <div>
-            <label class="block text-xs text-slate-400 mb-1">Tempo real (h)</label>
-            <input type="number" id="edit-actual" min="0" step="0.5"
-              class="w-full bg-dock-800 border border-slate-700 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-cyan-500/50" />
-          </div>
+            class="field-control" placeholder="Ex.: site, campanha, cliente" />
         </div>
         <div class="flex gap-3 pt-2">
           <button type="button" id="btn-cancel-edit"
             class="flex-1 bg-slate-700 hover:bg-slate-600 py-2.5 rounded-lg text-sm font-medium">Cancelar</button>
           <button type="submit"
-            class="flex-1 bg-cyan-600 hover:bg-cyan-500 py-2.5 rounded-lg text-sm font-medium">Salvar</button>
+            class="flex-1 bg-cyan-600 hover:bg-cyan-500 py-2.5 rounded-lg text-sm font-medium">Salvar alterações</button>
         </div>
       </form>
     </div>
   </div>
 
-  <!-- Modal de detalhes (etapas, tarefas, comentários, histórico) -->
+  <!-- Modal de detalhes e progresso -->
   <div id="modal-details" class="fixed inset-0 bg-black/75 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
     <div class="bg-dock-900 border border-slate-700 rounded-2xl w-full max-w-lg p-6 shadow-2xl relative max-h-[92vh] overflow-y-auto">
       <button id="btn-close-details" class="absolute top-4 right-4 text-slate-400 hover:text-white text-lg">✕</button>
 
-      <h2 id="detail-title" class="text-2xl font-bold text-white mb-1 mono pr-6"></h2>
-      <div id="detail-meta" class="flex flex-wrap gap-x-3 gap-y-1 text-[11px] text-slate-400 mono mb-3"></div>
+      <h2 id="detail-title" class="text-2xl font-bold text-white mb-1 pr-6"></h2>
+      <div id="detail-meta" class="flex flex-wrap gap-x-3 gap-y-1 text-[11px] text-slate-400 mb-4"></div>
 
       <!-- Porcentagem geral -->
-      <div class="flex items-center gap-2 text-lg font-semibold mb-2">
-        <span id="detail-member" class="text-red-400 font-bold">Geral</span>
-        <span class="text-slate-400">→</span>
-        <span id="detail-percent" class="mono text-emerald-400">0%</span>
-      </div>
-      <div class="mb-4">
-        <div class="bar-track">
+      <div class="details-summary p-4 mb-5">
+        <div class="flex items-center justify-between gap-3 mb-2">
+          <div>
+            <p class="text-[10px] uppercase tracking-widest text-slate-400">Progresso médio do projeto</p>
+            <p class="text-xs text-slate-500 mt-1">Média do percentual informado para cada membro.</p>
+          </div>
+          <span id="detail-percent" class="mono text-2xl font-bold text-emerald-300">0%</span>
+        </div>
+        <div class="bar-track h-2.5">
           <div id="detail-bar" class="bar-fill" style="width: 0%; background-color: #10b981; color: #10b981;"></div>
         </div>
       </div>
 
       <!-- Abas de detalhes -->
       <div class="flex gap-2 mb-4 border-b border-slate-700 pb-3">
-        <button data-dtab="steps" class="dtab-btn px-3 py-1 rounded-full text-xs font-medium bg-cyan-600 text-white">✅ Etapas</button>
-        <button data-dtab="comments" class="dtab-btn px-3 py-1 rounded-full text-xs font-medium bg-slate-700 text-slate-300 hover:bg-slate-600">💬 Comentários <span id="comment-count" class="mono"></span></button>
-        <button data-dtab="history" class="dtab-btn px-3 py-1 rounded-full text-xs font-medium bg-slate-700 text-slate-300 hover:bg-slate-600">🕒 Histórico</button>
+        <button data-dtab="steps" class="dtab-btn px-3 py-1.5 rounded-lg text-xs font-medium bg-cyan-600 text-white">Progresso por membro</button>
+        <button data-dtab="comments" class="dtab-btn px-3 py-1.5 rounded-lg text-xs font-medium bg-slate-700 text-slate-300 hover:bg-slate-600">Comentários <span id="comment-count" class="mono"></span></button>
+        <button data-dtab="history" class="dtab-btn px-3 py-1.5 rounded-lg text-xs font-medium bg-slate-700 text-slate-300 hover:bg-slate-600">Histórico</button>
       </div>
 
-      <!-- Aba: Etapas / Membros / Subtarefas -->
+      <!-- Aba: Progresso por membro -->
       <div id="dtab-steps">
-        <div id="members-list" class="space-y-3 max-h-72 overflow-y-auto pr-1">
+        <div id="members-list" class="space-y-2 max-h-[30rem] overflow-y-auto pr-1">
           <!-- Renderizado via JS -->
         </div>
         <div class="mt-4 flex gap-2">
-          <input type="text" id="new-member-name" placeholder="Nome do membro"
-            class="flex-1 bg-dock-800 border border-slate-700 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-emerald-500" />
+          <input type="text" id="new-member-name" placeholder="Nome do membro" class="field-control" />
           <button id="btn-add-member" type="button"
-            class="border-2 border-emerald-400 bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 font-medium px-3 py-2 rounded-md transition text-sm whitespace-nowrap">
-            + Adicionar
+            class="border border-cyan-400/50 bg-cyan-500/10 hover:bg-cyan-500/20 text-cyan-300 font-medium px-3 py-2 rounded-lg transition text-sm whitespace-nowrap">
+            Adicionar
           </button>
         </div>
       </div>
@@ -327,8 +384,7 @@
       <div id="dtab-comments" class="hidden">
         <div id="comments-list" class="space-y-3 max-h-56 overflow-y-auto pr-1"></div>
         <div class="mt-4 flex gap-2">
-          <input type="text" id="new-comment" placeholder="Escreva um comentário..."
-            class="flex-1 bg-dock-800 border border-slate-700 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-cyan-500" />
+          <input type="text" id="new-comment" placeholder="Escreva um comentário..." class="field-control" />
           <button id="btn-add-comment" type="button"
             class="bg-cyan-600 hover:bg-cyan-500 text-white font-medium px-4 py-2 rounded-md transition text-sm whitespace-nowrap">
             Enviar
@@ -343,6 +399,36 @@
     </div>
   </div>
 
+  <!-- Celebração ao entregar -->
+  <div id="delivery-celebration" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-[60] hidden flex items-center justify-center p-4">
+    <div class="celebration-pop panel w-full max-w-sm p-5 text-center relative">
+      <button id="btn-close-celebration" class="absolute top-3 right-3 w-8 h-8 rounded-full bg-slate-700 text-slate-300 hover:bg-slate-600 transition" aria-label="Fechar">✕</button>
+      <p id="celebration-kicker" class="text-[10px] uppercase tracking-[.2em] text-emerald-300 font-bold mb-2">Deadline entregue</p>
+      <h2 id="celebration-title" class="text-xl font-semibold text-white mb-4"></h2>
+      <div class="celebration-stage">
+        <img id="celebration-image" class="celebration-image" alt="Meme dos coordenadores" />
+        <div id="celebration-bubble" class="comic-bubble">Bom trabalho Lacis</div>
+      </div>
+      <p id="celebration-copy" class="text-xs text-slate-400 mt-4">Entrega registrada dentro do prazo.</p>
+      <button id="btn-continue-celebration" class="mt-4 w-full bg-emerald-600 hover:bg-emerald-500 text-white font-semibold py-2.5 rounded-lg transition">Continuar</button>
+    </div>
+  </div>
+
+  <!-- Aviso quando um prazo vence -->
+  <div id="overdue-alert" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-[60] hidden flex items-center justify-center p-4">
+    <div class="celebration-pop panel w-full max-w-sm p-5 text-center relative">
+      <button id="btn-close-overdue" class="absolute top-3 right-3 w-8 h-8 rounded-full bg-slate-700 text-slate-300 hover:bg-slate-600 transition" aria-label="Fechar">✕</button>
+      <p class="text-[10px] uppercase tracking-[.2em] text-red-300 font-bold mb-2">Prazo vencido</p>
+      <h2 id="overdue-title" class="text-xl font-semibold text-white mb-3"></h2>
+      <div class="overdue-stage">
+        <img id="overdue-image" class="celebration-image" alt="Meme dos coordenadores" />
+        <div id="overdue-bubble" class="comic-bubble">Esperava mais Lacis</div>
+      </div>
+      <p class="text-xs text-slate-400 mt-4">Esse deadline passou da data limite.</p>
+      <button id="btn-close-overdue-action" class="mt-4 w-full bg-red-600 hover:bg-red-500 text-white font-semibold py-2.5 rounded-lg transition">Entendi</button>
+    </div>
+  </div>
+
   <script>
     // ============ Estado ============
     let deadlines = [];
@@ -354,6 +440,7 @@
     let currentTab = 'list';
     let detailsTab = 'steps';
     let calYear, calMonth;
+    const overdueMemeShown = new Set();
 
     const API = '/api/deadlines';
 
@@ -370,6 +457,7 @@
       deadlines = await res.json();
       render();
       renderTagFilter();
+      announceOverdueDeadlines();
     }
 
     async function createDeadline(data) {
@@ -402,6 +490,62 @@
       const res = await apiFetch(`${API}/${id}`, { method: 'DELETE' });
       if (!res.ok) throw new Error('Erro ao excluir');
       return res.json();
+    }
+
+    const COMPLETION_MEMES = [
+      { image: '/memes/coordinator-2.jpeg', text: 'Bom trabalho Lacis' },
+      { image: '/memes/coordinator-3.jpeg', text: 'Estou muito orgulhoso Lacis' },
+    ];
+    const LOW_PROGRESS_MEME = {
+      image: '/memes/coordinator-4.jpeg',
+      text: 'Esperava mais Lacis',
+    };
+    const LOW_PROGRESS_THRESHOLD = 20;
+
+    function overdueMeme(deadline) {
+      return LOW_PROGRESS_MEME;
+    }
+
+    function showCompletionCelebration(id) {
+      const deadline = deadlines.find(item => item.id === id);
+      const meme = COMPLETION_MEMES[Math.floor(Math.random() * COMPLETION_MEMES.length)];
+      document.getElementById('celebration-title').textContent = deadline ? deadline.title : 'Prazo concluído';
+      document.getElementById('celebration-image').src = meme.image;
+      document.getElementById('celebration-bubble').textContent = meme.text;
+      document.getElementById('celebration-copy').textContent = 'Entrega registrada dentro do prazo.';
+      document.getElementById('delivery-celebration').classList.remove('hidden');
+    }
+
+    function closeDeliveryCelebration() {
+      document.getElementById('delivery-celebration').classList.add('hidden');
+    }
+
+    function showOverdueAlert(id) {
+      const deadline = deadlines.find(item => item.id === id);
+      if (!deadline) return;
+      const meme = overdueMeme(deadline);
+      document.getElementById('overdue-title').textContent = deadline.title;
+      document.getElementById('overdue-image').src = meme.image;
+      document.getElementById('overdue-bubble').textContent = meme.text;
+      document.getElementById('overdue-alert').classList.remove('hidden');
+    }
+
+    function closeOverdueAlert() {
+      document.getElementById('overdue-alert').classList.add('hidden');
+    }
+
+    function announceOverdueDeadlines() {
+      const now = Date.now();
+      const overdue = deadlines.find(d => !d.finished_at && parseISO(d.due_at).getTime() < now && !overdueMemeShown.has(d.id));
+      if (!overdue) return;
+      const progress = overallPercent(overdue);
+      if (progress >= 100) {
+        overdueMemeShown.add(overdue.id);
+        window.setTimeout(() => showCompletionCelebration(overdue.id), 180);
+      } else if (progress <= LOW_PROGRESS_THRESHOLD) {
+        overdueMemeShown.add(overdue.id);
+        window.setTimeout(() => showOverdueAlert(overdue.id), 180);
+      }
     }
 
     // ============ Cores de usuário (comentários/histórico) ============
@@ -455,7 +599,7 @@
         label = 'Atrasado';
         percent = 100;
       } else if (daysLeft > 30) {
-        color = '#22c55e'; label = 'Tranquilo';
+        color = '#22c55e'; label = 'No prazo';
       } else if (daysLeft > 15) {
         color = '#eab308'; label = 'Atenção';
       } else if (daysLeft > 7) {
@@ -503,7 +647,8 @@
         filtered = filtered.filter(d =>
           (d.title || '').toLowerCase().includes(q) ||
           (d.description || '').toLowerCase().includes(q) ||
-          (d.tags || []).some(t => t.includes(q))
+          (d.tags || []).some(t => t.includes(q)) ||
+          (d.members || []).some(m => (m.name || '').toLowerCase().includes(q))
         );
       }
       if (selectedTag) {
@@ -548,19 +693,22 @@
               <div class="flex-1 min-w-0">
                 <div class="flex items-center gap-1.5 mb-0.5 flex-wrap">
                   <h3 class="font-semibold text-sm truncate leading-tight">${escapeHtml(d.title)}</h3>
-                  <span class="text-[10px] px-1.5 py-0.5 rounded-full font-medium shrink-0" style="background:${urgency.color}22;color:${urgency.color}">
-                    ${urgency.label}
-                  </span>
                   <span class="text-[10px] px-1.5 py-0.5 rounded-full font-medium shrink-0" style="background:${prio.color}22;color:${prio.color}">
-                    ${prio.label}
+                    Prioridade: ${prio.label}
                   </span>
                 </div>
                 ${d.description ? `<p class="text-xs text-slate-400 mb-1 truncate">${escapeHtml(d.description)}</p>` : ''}
                 <div class="flex flex-wrap gap-x-3 gap-y-0.5 text-[10px] text-slate-500 mono">
                   <span>📅 ${formatDate(d.due_at)}</span>
-                  ${(d.estimated_hours || d.actual_hours) ? `<span>⏱ ${d.estimated_hours || 0}h/${d.actual_hours || 0}h</span>` : ''}
                   ${isFinished ? `<span class="text-emerald-400">✓ ${formatDate(d.finished_at)}</span>` : ''}
                 </div>
+                ${!isFinished && remaining.overdue ? (() => {
+                  const overdue = overdueMeme(d);
+                  return `<div class="overdue-meme-strip">
+                    <img src="${overdue.image}" class="overdue-meme-thumb" alt="Meme dos coordenadores" />
+                    <div><span class="text-[9px] uppercase tracking-wider text-red-300">Atenção</span><div class="comic-bubble mt-1">${escapeHtml(overdue.text)}</div></div>
+                  </div>`;
+                })() : ''}
                 ${(d.tags || []).length ? `
                   <div class="flex flex-wrap gap-1 mt-1">
                     ${d.tags.map(t => `
@@ -571,12 +719,25 @@
                     `).join('')}
                   </div>` : ''}
                 ${members.length ? `
-                  <div class="flex -space-x-1.5 mt-1.5">
-                    ${members.slice(0, 4).map(m => `
-                      <span class="w-5 h-5 rounded-full text-[9px] font-bold flex items-center justify-center border-2 border-dock-900"
-                        style="background:${m.color || '#64748b'}22;color:${m.color || '#64748b'}" title="${escapeHtml(m.name)}">${escapeHtml((m.name || '?').charAt(0).toUpperCase())}</span>
-                    `).join('')}
-                    ${members.length > 4 ? `<span class="w-5 h-5 rounded-full text-[9px] font-bold flex items-center justify-center bg-slate-700 text-slate-300 border-2 border-dock-900">+${members.length - 4}</span>` : ''}
+                  <div class="mt-3 pt-3 border-t border-slate-800/80">
+                    <div class="flex items-center justify-between text-[10px] uppercase tracking-wider text-slate-500 mb-2">
+                      <span>Progresso por membro</span>
+                      <span>${members.length} ${members.length === 1 ? 'pessoa' : 'pessoas'}</span>
+                    </div>
+                    <div class="space-y-1.5">
+                      ${members.slice(0, 3).map(m => {
+                        const memberPct = memberPercent(m);
+                        const memberColor = m.color || '#06b6d4';
+                        return `<div class="member-progress-row">
+                          <div class="flex items-center justify-between gap-2 mb-1">
+                            <span class="text-[11px] text-slate-300 truncate">${escapeHtml(m.name)}</span>
+                            <span class="mono text-[11px] font-semibold shrink-0" style="color:${memberColor}">${memberPct}%</span>
+                          </div>
+                          <div class="bar-track h-1.5"><div class="member-progress-fill" style="width:${memberPct}%;background:${memberColor}"></div></div>
+                        </div>`;
+                      }).join('')}
+                      ${members.length > 3 ? `<p class="text-[10px] text-slate-500 pt-1">+${members.length - 3} membros — abra para ver todos</p>` : ''}
+                    </div>
                   </div>` : ''}
               </div>
 
@@ -592,7 +753,7 @@
 
             <div class="mt-2">
               <div class="flex justify-between text-[10px] text-slate-500 mb-0.5">
-                <span>Progresso</span>
+                <span>Progresso médio do projeto</span>
                 <span class="mono">${progress}%</span>
               </div>
               <div class="bar-track">
@@ -656,7 +817,14 @@
     const STEP_WEIGHTS = [10, 20, 30, 25, 15];
     const STEP_NAMES = ['intro', 'work', 'prop', 'results', 'conclusion'];
 
+    function clampPercent(value) {
+      const parsed = Number(value);
+      if (!Number.isFinite(parsed)) return 0;
+      return Math.max(0, Math.min(100, Math.round(parsed)));
+    }
+
     function memberPercent(m) {
+      if (m && m.percent !== undefined && m.percent !== null) return clampPercent(m.percent);
       const steps = Array.isArray(m.steps) ? m.steps : [];
       const stepsPct = steps.reduce((sum, idx) => sum + (STEP_WEIGHTS[idx] || 0), 0);
       const tasks = Array.isArray(m.tasks) ? m.tasks : [];
@@ -681,17 +849,17 @@
       selectedDeadline.members.forEach(m => {
         m.tasks = m.tasks || [];
         m.color = m.color || '#06b6d4';
+        m.percent = memberPercent(m);
       });
       if (selectedDeadline.members.length === 0 && selectedDeadline.description) {
-        selectedDeadline.members = [{ name: selectedDeadline.description, steps: selectedDeadline.steps || [], tasks: [], color: '#06b6d4' }];
+        selectedDeadline.members = [{ name: selectedDeadline.description, percent: 0, steps: selectedDeadline.steps || [], tasks: [], color: '#06b6d4' }];
       }
 
       document.getElementById('detail-title').innerText = selectedDeadline.title;
       document.getElementById('detail-meta').innerHTML = `
         <span>📅 ${formatDate(selectedDeadline.due_at)}</span>
         ${selectedDeadline.finished_at ? `<span class="text-emerald-400">✓ Finalizado ${formatDate(selectedDeadline.finished_at)}</span>` : ''}
-        ${(selectedDeadline.estimated_hours || selectedDeadline.actual_hours) ? `<span>⏱ ${selectedDeadline.estimated_hours || 0}h / ${selectedDeadline.actual_hours || 0}h</span>` : ''}
-        <span style="color:${priorityMeta(selectedDeadline.priority).color}">${priorityMeta(selectedDeadline.priority).label}</span>
+        <span style="color:${priorityMeta(selectedDeadline.priority).color}">Prioridade: ${priorityMeta(selectedDeadline.priority).label}</span>
         ${(selectedDeadline.tags || []).map(t => `<span class="text-cyan-400">#${escapeHtml(t)}</span>`).join('')}
       `;
 
@@ -737,43 +905,25 @@
         const initial = (m.name || '?').charAt(0).toUpperCase();
         return `
           <div class="member-block bg-dock-950 rounded-xl border border-slate-800 p-3">
-            <div class="flex items-center justify-between gap-2 mb-2">
+            <div class="flex items-center justify-between gap-2 mb-3">
               <div class="flex items-center gap-2 min-w-0">
                 <span class="w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold shrink-0"
                   style="background:${color}26;color:${color}">${escapeHtml(initial)}</span>
-                <span class="member-name-text text-red-400 font-bold text-sm truncate">${escapeHtml(m.name)}</span>
-                <span class="mono text-emerald-400 text-xs font-semibold shrink-0">${pct}%</span>
-              </div>
-              <button type="button" onclick="event.stopPropagation(); removeMember(${mi})"
-                class="text-[10px] px-1.5 py-0.5 rounded bg-red-600/10 text-red-400 border border-red-600/30 hover:bg-red-600/20 transition shrink-0">🗑</button>
-            </div>
-
-            <div class="space-y-2.5 font-mono text-sm">
-              ${STEP_NAMES.map((name, si) => `
-                <label class="flex items-center gap-2 cursor-pointer tree-line hover:text-white transition">
-                  <input type="checkbox" data-step="${si}" ${(m.steps || []).includes(si) ? 'checked' : ''}
-                    class="member-step rounded bg-dock-800 border-slate-700 text-emerald-500 focus:ring-0" />
-                  <span>${name}</span>
-                </label>
-              `).join('')}
-            </div>
-
-            <div class="mt-3 border-t border-slate-800 pt-2 space-y-1.5">
-              ${(m.tasks || []).map((t, ti) => `
-                <div class="task-item flex items-center gap-2" data-text="${escapeHtml(t.text)}">
-                  <input type="checkbox" ${t.done ? 'checked' : ''}
-                    class="task-check rounded bg-dock-800 border-slate-700 text-cyan-500 focus:ring-0 shrink-0" />
-                  <span class="text-xs font-mono truncate ${t.done ? 'line-through text-slate-500' : ''}">${escapeHtml(t.text)}</span>
-                  <button type="button" onclick="event.stopPropagation(); removeTask(${mi}, ${ti})"
-                    class="text-slate-500 hover:text-red-400 text-xs ml-auto shrink-0">✕</button>
+                <div class="min-w-0">
+                  <span class="member-name-text text-slate-100 font-semibold text-sm truncate block">${escapeHtml(m.name)}</span>
+                  <span class="text-[10px] text-slate-500">Participação no projeto</span>
                 </div>
-              `).join('')}
-              <div class="flex gap-1.5 pt-1">
-                <input type="text" id="task-input-${mi}" placeholder="Nova subtarefa..."
-                  class="flex-1 bg-dock-800 border border-slate-700 rounded px-2 py-1 text-xs focus:outline-none focus:ring-1 focus:ring-cyan-500" />
-                <button type="button" onclick="event.stopPropagation(); addTask(${mi})"
-                  class="text-[10px] px-2 py-1 rounded bg-cyan-600/20 text-cyan-400 border border-cyan-600/40 hover:bg-cyan-600/30 transition shrink-0">+</button>
               </div>
+              <div class="flex items-center gap-2 shrink-0">
+                <span class="member-percent-value mono text-emerald-300 text-lg font-bold">${pct}%</span>
+                <button type="button" onclick="event.stopPropagation(); removeMember(${mi})"
+                  class="text-[10px] px-1.5 py-0.5 rounded bg-red-600/10 text-red-400 border border-red-600/30 hover:bg-red-600/20 transition">Remover</button>
+              </div>
+            </div>
+            <div class="bar-track h-2 mb-3"><div class="member-progress-fill member-bar-fill" style="width:${pct}%;background:${color}"></div></div>
+            <div class="flex items-center gap-3">
+              <input type="range" min="0" max="100" step="1" value="${pct}" class="member-percent percent-range flex-1" aria-label="Percentual de ${escapeHtml(m.name)}" />
+              <input type="number" min="0" max="100" step="1" value="${pct}" class="member-percent-number percent-number field-control py-1.5" aria-label="Percentual numérico de ${escapeHtml(m.name)}" />
             </div>
           </div>
         `;
@@ -786,15 +936,8 @@
       const members = [...blocks].map((block, mi) => {
         const prev = (selectedDeadline.members && selectedDeadline.members[mi]) || {};
         const name = block.querySelector('.member-name-text').textContent.trim();
-        const steps = [...block.querySelectorAll('.member-step')]
-          .filter(cb => cb.checked)
-          .map(cb => parseInt(cb.dataset.step))
-          .sort((a, b) => a - b);
-        const tasks = [...block.querySelectorAll('.task-item')].map(ti => ({
-          text: ti.dataset.text,
-          done: ti.querySelector('.task-check').checked,
-        }));
-        return { name, steps, tasks, color: prev.color };
+        const percent = clampPercent(block.querySelector('.member-percent-number')?.value ?? block.querySelector('.member-percent')?.value);
+        return { name, percent, steps: prev.steps || [], tasks: prev.tasks || [], color: prev.color };
       });
       selectedDeadline.members = members;
       updateDeadline(selectedDeadline.id, { members }).catch(e => console.log('Não foi possível salvar os membros:', e.message));
@@ -817,7 +960,7 @@
         setTimeout(() => input.classList.remove('input-error'), 900);
         return;
       }
-      selectedDeadline.members.push({ name, steps: [], tasks: [], color: '#06b6d4' });
+      selectedDeadline.members.push({ name, percent: 0, steps: [], tasks: [], color: '#06b6d4' });
       input.value = '';
       renderMembers();
       syncMembersFromDOM();
@@ -922,6 +1065,9 @@
       try {
         await updateDeadline(id, { finished: true });
         await fetchDeadlines();
+        const finished = deadlines.find(item => item.id === id);
+        const finishedOnTime = finished && finished.finished_at && parseISO(finished.finished_at).getTime() <= parseISO(finished.due_at).getTime();
+        if (finishedOnTime && overallPercent(finished) >= 100) showCompletionCelebration(id);
       } catch (e) {
         alert(e.message);
       }
@@ -958,8 +1104,6 @@
       document.getElementById('edit-due').value = local;
       document.getElementById('edit-priority').value = d.priority || 'medium';
       document.getElementById('edit-tags').value = (d.tags || []).join(', ');
-      document.getElementById('edit-est').value = d.estimated_hours || '';
-      document.getElementById('edit-actual').value = d.actual_hours || '';
       document.getElementById('modal').classList.remove('hidden');
     }
 
@@ -1097,12 +1241,15 @@
     function addFormMember(name = '') {
       const container = document.getElementById('form-members');
       const row = document.createElement('div');
-      row.className = 'flex items-center gap-2';
+      row.className = 'form-member-row flex items-center gap-2';
       row.innerHTML = `
-        <input type="text" value="${escapeHtml(name)}" placeholder="Membro"
-          class="member-name w-40 bg-dock-800 border border-slate-700 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-emerald-500" />
+        <input type="text" value="${escapeHtml(name)}" placeholder="Nome do membro" class="member-name field-control flex-1" />
+        <div class="flex items-center gap-1.5 shrink-0">
+          <input type="number" min="0" max="100" step="1" value="0" placeholder="0" class="member-percent-input field-control w-20 text-right" aria-label="Percentual inicial" />
+          <span class="text-xs text-slate-500">%</span>
+        </div>
         <button type="button" onclick="this.parentElement.remove()"
-          class="text-slate-500 hover:text-red-400 transition text-sm" title="Remover membro">✕</button>
+          class="text-slate-500 hover:text-red-400 transition text-xs" title="Remover membro">Remover</button>
       `;
       container.appendChild(row);
       row.querySelector('input').focus();
@@ -1124,16 +1271,19 @@
         if (!title || !dueLocal) return;
 
         const due = new Date(dueLocal).toISOString();
-        const members = [...document.querySelectorAll('#form-members .member-name')]
-          .map(i => i.value.trim())
-          .filter(Boolean)
-          .map(name => ({ name, steps: [], tasks: [] }));
+        const members = [...document.querySelectorAll('#form-members .form-member-row')]
+          .map(row => ({
+            name: row.querySelector('.member-name').value.trim(),
+            percent: clampPercent(row.querySelector('.member-percent-input').value),
+            steps: [],
+            tasks: []
+          }))
+          .filter(member => member.name);
         const tags = document.getElementById('new-tags').value.split(',').map(t => t.trim()).filter(Boolean);
         const priority = document.getElementById('new-priority').value;
-        const estimated_hours = parseFloat(document.getElementById('new-est').value) || 0;
 
         try {
-          await createDeadline({ title, description, due_at: due, members, tags, priority, estimated_hours });
+          await createDeadline({ title, description, due_at: due, members, tags, priority });
           document.getElementById('form-new').reset();
           document.getElementById('new-tags').value = '';
           resetFormMembers();
@@ -1152,11 +1302,9 @@
         const due = new Date(dueLocal).toISOString();
         const tags = document.getElementById('edit-tags').value.split(',').map(t => t.trim()).filter(Boolean);
         const priority = document.getElementById('edit-priority').value;
-        const estimated_hours = parseFloat(document.getElementById('edit-est').value) || 0;
-        const actual_hours = parseFloat(document.getElementById('edit-actual').value) || 0;
 
         try {
-          await updateDeadline(id, { title, description, due_at: due, tags, priority, estimated_hours, actual_hours });
+          await updateDeadline(id, { title, description, due_at: due, tags, priority });
           document.getElementById('modal').classList.add('hidden');
           await fetchDeadlines();
         } catch (err) {
@@ -1283,14 +1431,44 @@
         document.getElementById('modal-details').classList.add('hidden');
       });
 
+      document.getElementById('btn-close-celebration').addEventListener('click', closeDeliveryCelebration);
+      document.getElementById('btn-continue-celebration').addEventListener('click', closeDeliveryCelebration);
+      document.getElementById('delivery-celebration').addEventListener('click', (e) => {
+        if (e.target.id === 'delivery-celebration') closeDeliveryCelebration();
+      });
+      document.getElementById('btn-close-overdue').addEventListener('click', closeOverdueAlert);
+      document.getElementById('btn-close-overdue-action').addEventListener('click', closeOverdueAlert);
+      document.getElementById('overdue-alert').addEventListener('click', (e) => {
+        if (e.target.id === 'overdue-alert') closeOverdueAlert();
+      });
+      document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape') {
+          closeDeliveryCelebration();
+          closeOverdueAlert();
+        }
+      });
+
       document.querySelectorAll('.dtab-btn').forEach(btn => {
         btn.addEventListener('click', () => setDetailsTab(btn.dataset.dtab));
       });
 
+      document.getElementById('members-list').addEventListener('input', (e) => {
+        if (!e.target || (!e.target.classList.contains('member-percent') && !e.target.classList.contains('member-percent-number'))) return;
+        const block = e.target.closest('.member-block');
+        if (!block) return;
+        const index = [...document.querySelectorAll('#members-list .member-block')].indexOf(block);
+        const percent = clampPercent(e.target.value);
+        selectedDeadline.members[index].percent = percent;
+        block.querySelector('.member-percent').value = percent;
+        block.querySelector('.member-percent-number').value = percent;
+        block.querySelector('.member-percent-value').textContent = `${percent}%`;
+        block.querySelector('.member-bar-fill').style.width = `${percent}%`;
+        updateOverall();
+      });
+
       document.getElementById('members-list').addEventListener('change', (e) => {
-        if (e.target && (e.target.classList.contains('member-step') || e.target.classList.contains('task-check'))) {
+        if (e.target && (e.target.classList.contains('member-percent') || e.target.classList.contains('member-percent-number'))) {
           syncMembersFromDOM();
-          renderMembers();
         }
       });
 
@@ -1321,6 +1499,7 @@
     // Update contínuo (a cada 1s)
     function tick() {
       render();
+      announceOverdueDeadlines();
     }
 
     // ============ Init ============
